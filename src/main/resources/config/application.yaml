@@ -19,7 +19,7 @@ latexml:
     nodefaultresources:
     linelength: 90
     quiet:
-    preload: "LaTeX.pool,article.cls,amsmath.sty,amsthm.sty,amstext.sty,amssymb.sty,eucal.sty,DLMFmath.sty,[dvipsnames]xcolor.sty,url.sty,hyperref.sty,[ids]latexml.sty,texvc"
+    preload: "LaTeX.pool,article.cls,amsmath.sty,amsthm.sty,amstext.sty,amssymb.sty,eucal.sty,DLMFmath.sty,[dvipsnames]xcolor.sty,url.sty,hyperref.sty,[ids]latexml.sty,DLMFmath.sty"
     stylesheet: "DRMF.xsl"
 
 # Mathoid - alternative Latex to MathML converter
