@@ -35,6 +35,7 @@ latexml:
       - "[ids]latexml.sty"
       - "texvc"
       - "wikidata.sty"
+      - "mleftright.sty"
     stylesheet: "DRMF.xsl"
 
 # Mathoid - alternative Latex to MathML converter
