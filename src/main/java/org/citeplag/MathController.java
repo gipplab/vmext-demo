@@ -70,13 +70,18 @@ public class MathController {
         LaTeXMLConverter laTeXMLConverter = new LaTeXMLConverter(usedConfig);
 
         // no url = use the local installation of latexml, otherwise use: url = online service
+        LaTeXMLServiceResponse response;
         if (StringUtils.isEmpty(usedConfig.getUrl())) {
             logger.info("local latex conversion from: " + request.getRemoteAddr());
-            return laTeXMLConverter.runLatexmlc(latex);
+            response = laTeXMLConverter.runLatexmlc(latex);
         } else {
             logger.info("service latex conversion from: " + request.getRemoteAddr());
-            return laTeXMLConverter.convertLatexmlService(latex);
+            response = laTeXMLConverter.convertLatexmlService(latex);
         }
+
+
+
+        return response;
     }
 
     /**
