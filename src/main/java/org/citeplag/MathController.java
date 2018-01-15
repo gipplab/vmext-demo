@@ -7,6 +7,7 @@ import com.formulasearchengine.mathmlconverters.mathoid.EnrichedMathMLTransforme
 import com.formulasearchengine.mathmlconverters.mathoid.MathoidConverter;
 import com.formulasearchengine.mathmlsim.similarity.MathPlag;
 import com.formulasearchengine.mathmlsim.similarity.result.Match;
+import com.formulasearchengine.mathmltools.mml.elements.MathDoc;
 import com.google.common.collect.Maps;
 import io.swagger.annotations.ApiOperation;
 import org.apache.log4j.Logger;
@@ -19,9 +20,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.ResourceAccessException;
+import org.xml.sax.SAXException;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +66,7 @@ public class MathController {
     @ApiOperation(value = "Converts a Latex String via LaTeXML to MathML semantics.")
     public LaTeXMLServiceResponse convertLatexml(
             @RequestParam(required = false) String config,
+            @RequestParam(required = false) String rawLatex,
             @RequestParam String latex,
             HttpServletRequest request) throws Exception {
 
@@ -79,8 +85,29 @@ public class MathController {
             response = laTeXMLConverter.convertLatexmlService(latex);
         }
 
+        return postProcessingOnMML(rawLatex, response);
+    }
 
-
+    private LaTeXMLServiceResponse postProcessingOnMML( String originalInputTex, LaTeXMLServiceResponse response ){
+        try {
+            final MathDoc math = new MathDoc(MathDoc.tryFixHeader(response.getResult()));
+            math.fixGoldCd();
+            if ( originalInputTex != null )
+                math.changeTeXAnnotation( originalInputTex );
+            String newMML = math.toString();
+            response.setResult( newMML );
+        } catch (ParserConfigurationException | IOException | SAXException e) {
+            // write stack trace to string
+            StringWriter sw = new StringWriter();
+            PrintWriter printWriter = new PrintWriter(sw);
+            e.printStackTrace( printWriter );
+            String stackTrace = sw.toString();
+            String oldLog = response.getLog();
+            response.setLog( oldLog + System.lineSeparator() +
+                    "Cannot post process MML response from Latexml. Reason: " + e.getMessage() + System.lineSeparator() +
+                    stackTrace
+            );
+        }
         return response;
     }
 
