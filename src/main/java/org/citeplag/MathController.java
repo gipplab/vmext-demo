@@ -57,6 +57,7 @@ public class MathController {
      * POST method for calling the LaTeXML service / installation.
      *
      * @param config  optional configuration, if null, system default will be used
+     * @param rawLatex the original (generic) input tex format, needed if the latex parameter is semantic
      * @param latex   latex to be converted
      * @param request http request for logging
      * @return service response
@@ -71,7 +72,9 @@ public class MathController {
             HttpServletRequest request) throws Exception {
 
         // if request configuration is given, use it.
-        LateXMLConfig usedConfig = config != null ? new ObjectMapper().readValue(config, LateXMLConfig.class) : lateXMLConfig;
+        LateXMLConfig usedConfig = config != null
+                ? new ObjectMapper().readValue(config, LateXMLConfig.class)
+                : lateXMLConfig;
 
         LaTeXMLConverter laTeXMLConverter = new LaTeXMLConverter(usedConfig);
 
@@ -88,24 +91,27 @@ public class MathController {
         return postProcessingOnMML(rawLatex, response);
     }
 
-    private LaTeXMLServiceResponse postProcessingOnMML( String originalInputTex, LaTeXMLServiceResponse response ){
+    private LaTeXMLServiceResponse postProcessingOnMML(String originalInputTex, LaTeXMLServiceResponse response) {
         try {
             final MathDoc math = new MathDoc(MathDoc.tryFixHeader(response.getResult()));
             math.fixGoldCd();
-            if ( originalInputTex != null )
-                math.changeTeXAnnotation( originalInputTex );
+            if (originalInputTex != null) {
+                math.changeTeXAnnotation(originalInputTex);
+            }
             String newMML = math.toString();
-            response.setResult( newMML );
+            response.setResult(newMML);
         } catch (ParserConfigurationException | IOException | SAXException e) {
             // write stack trace to string
             StringWriter sw = new StringWriter();
             PrintWriter printWriter = new PrintWriter(sw);
-            e.printStackTrace( printWriter );
+            e.printStackTrace(printWriter);
             String stackTrace = sw.toString();
             String oldLog = response.getLog();
-            response.setLog( oldLog + System.lineSeparator() +
-                    "Cannot post process MML response from Latexml. Reason: " + e.getMessage() + System.lineSeparator() +
-                    stackTrace
+            response.setLog(oldLog + System.lineSeparator()
+                    + "Cannot post process MML response from Latexml. Reason: "
+                    + e.getMessage()
+                    + System.lineSeparator()
+                    + stackTrace
             );
         }
         return response;
