@@ -100,7 +100,7 @@ public class MathController {
             }
             String newMML = math.toString();
             response.setResult(newMML);
-        } catch (ParserConfigurationException | IOException | SAXException e) {
+        } catch (NullPointerException | ParserConfigurationException | IOException | SAXException e) {
             // write stack trace to string
             StringWriter sw = new StringWriter();
             PrintWriter printWriter = new PrintWriter(sw);
