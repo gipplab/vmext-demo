@@ -1,7 +1,6 @@
 package org.citeplag;
 
 import io.swagger.annotations.ApiOperation;
-import org.citeplag.config.CASTranslatorConfig;
 import org.citeplag.config.LateXMLConfig;
 import org.citeplag.config.MathASTConfig;
 import org.citeplag.config.MathoidConfig;
@@ -30,9 +29,6 @@ public class ConfigController {
     @Autowired
     private MathoidConfig mathoidConfig;
 
-    @Autowired
-    private CASTranslatorConfig translatorConfig;
-
     @GetMapping("mathoid")
     @ApiOperation(value = "Show the current default LaTeXML configuration")
     public MathoidConfig getMathoidConfig(HttpServletRequest request) throws Exception {
@@ -49,11 +45,5 @@ public class ConfigController {
     @ApiOperation(value = "Get the Math AST ")
     public String getMathUrl() throws Exception {
         return mathASTConfig.getUrl();
-    }
-
-    @GetMapping("translator")
-    @ApiOperation(value = "Show the translator configuration")
-    public CASTranslatorConfig getTranslatorConfig(HttpServletRequest request) {
-        return translatorConfig;
     }
 }
