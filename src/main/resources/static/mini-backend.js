@@ -3,8 +3,8 @@
  * @author Vincent
  */
 
-/** Math AST URL */
-var mastUrl = "http://math.citeplag.org";
+/** Math AST URL, will be overwritten by the loaded config */
+var mastUrl = "";
 
 /** simple asynchronoues http client */
 var HttpClient = function() {

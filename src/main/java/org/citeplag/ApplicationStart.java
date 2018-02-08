@@ -1,6 +1,7 @@
 package org.citeplag;
 
 import com.fasterxml.classmate.TypeResolver;
+import com.formulasearchengine.mathosphere.basex.Server;
 import com.google.common.base.Predicate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -17,6 +18,10 @@ import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
+import java.net.URI;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import static com.google.common.base.Predicates.or;
 import static springfox.documentation.builders.PathSelectors.regex;
 
@@ -32,6 +37,12 @@ import static springfox.documentation.builders.PathSelectors.regex;
 public class ApplicationStart {
 
     public static void main(String[] args) throws Exception {
+        // run the basex search engine server first
+        URI resourceURI = ClassLoader.getSystemResource("sampleHarvest.xml").toURI();
+        Path sampleHarvest = Paths.get(resourceURI);
+        Server baseXServer = Server.getInstance();
+        baseXServer.startup(sampleHarvest.toFile());
+
         // start the full spring environment
         SpringApplication.run(ApplicationStart.class, args);
     }
@@ -81,7 +92,8 @@ public class ApplicationStart {
     private Predicate<String> getDocumentedApiPaths() {
         return or(
                 regex("/math.*"),
-                regex("/config.*")
+                regex("/config.*"),
+                regex("/basex.*")
         );
     }
 
