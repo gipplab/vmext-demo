@@ -12,6 +12,7 @@ import com.formulasearchengine.mathmlsim.similarity.result.Match;
 import com.formulasearchengine.mathmltools.mml.elements.MathDoc;
 import com.google.common.collect.Maps;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.apache.log4j.Logger;
 import org.citeplag.config.CASTranslatorConfig;
 import org.citeplag.config.LateXMLConfig;
@@ -126,7 +127,9 @@ public class MathController {
     @PostMapping("/translation")
     @ApiOperation(value = "Translates a semantic LaTeX string to a given CAS.")
     public TranslationResponse translation(
-            @RequestParam() String cas,
+            @RequestParam()
+            @ApiParam(allowableValues = "Maple, Mathematica", required = true)
+                    String cas,
             @RequestParam() String latex,
             HttpServletRequest request
     ) {

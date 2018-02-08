@@ -53,7 +53,7 @@
             <version>2.5</version>
         </dependency>
 
-        <!-- mathml tools -->
+        <!-- TODO has to be cleaned once mmltools is refactored -->
         <dependency>
             <groupId>com.formulasearchengine</groupId>
             <artifactId>mathmlsim</artifactId>
@@ -68,6 +68,13 @@
             <groupId>com.formulasearchengine</groupId>
             <artifactId>mathmltools</artifactId>
             <version>0.3.1-SNAPSHOT</version>
+        </dependency>
+
+        <!-- TODO avoid snapshots -> mathosphere/issues/167 -->
+        <dependency>
+            <groupId>com.formulasearchengine.mathosphere</groupId>
+            <artifactId>basex</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
         <!--Swagger -->
