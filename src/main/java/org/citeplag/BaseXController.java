@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
+
 import java.util.Arrays;
 
 /**
@@ -82,11 +83,11 @@ public class BaseXController {
             String cleaned = integerArray.replaceAll(" ", "");
             String[] elements = cleaned.split(",");
             delete = new Integer[elements.length];
-            for ( int i = 0; i < elements.length; i++ ){
-                delete[i] = Integer.parseInt( elements[i] );
+            for (int i = 0; i < elements.length; i++) {
+                delete[i] = Integer.parseInt(elements[i]);
             }
             LOG.info("Parsed integer arguments: " + Arrays.toString(delete));
-        } catch ( Exception e ){
+        } catch (Exception e) {
             LOG.error("Cannot parse list of integers!", e);
             return null;
         }

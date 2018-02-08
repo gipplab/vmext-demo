@@ -41,7 +41,7 @@ public class ApplicationStart {
         URI resourceURI = ClassLoader.getSystemResource("sampleHarvest.xml").toURI();
         Path sampleHarvest = Paths.get(resourceURI);
         Server baseXServer = Server.getInstance();
-        baseXServer.startup( sampleHarvest.toFile() );
+        baseXServer.startup(sampleHarvest.toFile());
 
         // start the full spring environment
         SpringApplication.run(ApplicationStart.class, args);
