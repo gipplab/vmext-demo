@@ -1,10 +1,7 @@
 package org.citeplag;
 
 import io.swagger.annotations.ApiOperation;
-import org.citeplag.config.CASTranslatorConfig;
-import org.citeplag.config.LateXMLConfig;
-import org.citeplag.config.MathASTConfig;
-import org.citeplag.config.MathoidConfig;
+import org.citeplag.config.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,6 +30,9 @@ public class ConfigController {
     @Autowired
     private CASTranslatorConfig translatorConfig;
 
+    @Autowired
+    private BaseXConfig baseXConfig;
+
     @GetMapping("mathoid")
     @ApiOperation(value = "Show the current default LaTeXML configuration")
     public MathoidConfig getMathoidConfig(HttpServletRequest request) throws Exception {
@@ -55,5 +55,11 @@ public class ConfigController {
     @ApiOperation(value = "Show the translator configuration")
     public CASTranslatorConfig getTranslatorConfig(HttpServletRequest request) {
         return translatorConfig;
+    }
+
+    @GetMapping("basex")
+    @ApiOperation(value = "Show the BaseX server configuration")
+    public BaseXConfig getBaseXConfig(HttpServletRequest request) {
+        return baseXConfig;
     }
 }

@@ -1,12 +1,15 @@
 package org.citeplag;
 
 import com.formulasearchengine.mathosphere.basex.Client;
+import com.formulasearchengine.mathosphere.basex.Server;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.citeplag.config.BaseXConfig;
 import org.citeplag.domain.MathRequest;
 import org.citeplag.domain.MathUpdate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -14,6 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 
 /**
@@ -25,6 +31,13 @@ import java.util.Arrays;
 @RequestMapping("/basex")
 public class BaseXController {
     private static final Logger LOG = LogManager.getLogger(BaseXController.class.getName());
+
+    // the final BaseX server
+    private static final Server BASEX_SERVER = Server.getInstance();
+    private static boolean serverRunning = false;
+
+    @Autowired
+    private BaseXConfig baseXConfig;
 
     @PostMapping
     @ApiOperation(value = "Run query on BaseX")
@@ -60,6 +73,10 @@ public class BaseXController {
     }
 
     private MathRequest process(String query, String type, HttpServletRequest request) {
+        if (!startServerIfNecessary()) {
+            LOG.warn("Return null for request, because BaseX server is not running.");
+            return null;
+        }
         LOG.info("BaseX processing request from: " + request.getRemoteAddr());
         MathRequest mreq = new MathRequest(query);
         mreq.setType(type);
@@ -75,6 +92,10 @@ public class BaseXController {
                     required = true) String integerArray,
             @RequestParam("MML") String harvest,
             HttpServletRequest request) {
+        if (!startServerIfNecessary()) {
+            LOG.warn("Return null for request, because BaseX server is not running.");
+            return null;
+        }
         LOG.info("Request updating given math from: " + request.getRemoteAddr());
 
         Integer[] delete;
@@ -101,6 +122,10 @@ public class BaseXController {
     public Integer dvsize(
             @RequestParam Integer revision,
             HttpServletRequest request) {
+        if (!startServerIfNecessary()) {
+            LOG.warn("Return null for request, because BaseX server is not running.");
+            return null;
+        }
         LOG.info("BaseX request to count number of formulae with revision number from: " + request.getRemoteAddr());
         Client client = new Client();
         return client.countRevisionFormula(revision);
@@ -109,8 +134,26 @@ public class BaseXController {
     @PostMapping("/countAll")
     @ApiOperation(value = "Count the total number of formulae")
     public Integer dvsize(HttpServletRequest request) {
+        if (!startServerIfNecessary()) {
+            LOG.warn("Return null for request, because BaseX server is not running.");
+            return null;
+        }
         LOG.info("BaseX request to count total number of formulae from: " + request.getRemoteAddr());
         Client client = new Client();
         return client.countAllFormula();
+    }
+
+    private boolean startServerIfNecessary() {
+        if (!serverRunning) {
+            LOG.info("Startup basex server with harvest file: " + baseXConfig.getHarvestPath());
+            Path path = Paths.get(baseXConfig.getHarvestPath());
+            try {
+                BASEX_SERVER.startup(path.toFile());
+                serverRunning = true;
+            } catch (IOException e) {
+                LOG.error("Cannot load harvest file to start BaseX server.", e);
+            }
+        }
+        return serverRunning;
     }
 }
