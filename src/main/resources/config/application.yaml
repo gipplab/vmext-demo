@@ -50,3 +50,6 @@ mathoid:
 translator:
   jarPath: "/home/andreg-p/Projects/latex-grammar/latex-to-cas-translator.jar"
   referencesPath: "/home/andreg-p/Projects/latex-grammar/libs/ReferenceData"
+
+basexserver:
+  harvestPath: "sampleHarvest.xml"

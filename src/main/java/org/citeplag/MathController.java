@@ -1,6 +1,8 @@
 package org.citeplag;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.formulasearchengine.mathmlconverters.cas.SaveTranslatorWrapper;
+import com.formulasearchengine.mathmlconverters.cas.TranslationResponse;
 import com.formulasearchengine.mathmlconverters.latexml.LaTeXMLConverter;
 import com.formulasearchengine.mathmlconverters.latexml.LaTeXMLServiceResponse;
 import com.formulasearchengine.mathmlconverters.mathoid.EnrichedMathMLTransformer;
@@ -10,7 +12,9 @@ import com.formulasearchengine.mathmlsim.similarity.result.Match;
 import com.formulasearchengine.mathmltools.mml.elements.MathDoc;
 import com.google.common.collect.Maps;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.apache.log4j.Logger;
+import org.citeplag.config.CASTranslatorConfig;
 import org.citeplag.config.LateXMLConfig;
 import org.citeplag.config.MathoidConfig;
 import org.citeplag.util.Example;
@@ -52,6 +56,10 @@ public class MathController {
 
     @Autowired
     private MathoidConfig mathoidConfig;
+
+
+    @Autowired
+    private CASTranslatorConfig translatorConfig;
 
     /**
      * POST method for calling the LaTeXML service / installation.
@@ -115,6 +123,34 @@ public class MathController {
             );
         }
         return response;
+    }
+
+    @PostMapping("/translation")
+    @ApiOperation(value = "Translates a semantic LaTeX string to a given CAS.")
+    public TranslationResponse translation(
+            @RequestParam()
+            @ApiParam(allowableValues = "Maple, Mathematica", required = true)
+                    String cas,
+            @RequestParam() String latex,
+            HttpServletRequest request
+    ) {
+        logger.info("translation process to " + cas + " from: " + request.getRemoteAddr());
+        SaveTranslatorWrapper translator = new SaveTranslatorWrapper();
+        try {
+            translator.init(
+                    translatorConfig.getJarPath(),
+                    cas,
+                    translatorConfig.getReferencesPath()
+            );
+            translator.translate(latex);
+            return translator.getTranslationResult();
+        } catch (Exception e) {
+            e.printStackTrace();
+            String errorMsg = "[ERROR] " + e.toString();
+            TranslationResponse response = new TranslationResponse();
+            response.setLog(errorMsg);
+            return response;
+        }
     }
 
     /**
