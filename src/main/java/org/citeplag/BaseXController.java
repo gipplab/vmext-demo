@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 import org.citeplag.config.BaseXConfig;
 import org.citeplag.domain.MathRequest;
 import org.citeplag.domain.MathUpdate;
+import org.citeplag.util.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,8 +17,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
-
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -88,9 +90,9 @@ public class BaseXController {
     public MathUpdate update(
             @RequestParam("Deletions") @ApiParam(
                     name = "Deletions",
-                    value = "List of integers. Separate integers by ','!",
-                    required = true) String integerArray,
-            @RequestParam("MML") String harvest,
+                    value = "List of integers. Separate integers by ','!")
+                    String integerArray,
+            @RequestParam(name = "MML", required = false) String harvest,
             HttpServletRequest request) {
         if (!startServerIfNecessary()) {
             LOG.warn("Return null for request, because BaseX server is not running.");
@@ -101,20 +103,41 @@ public class BaseXController {
         Integer[] delete;
 
         try {
-            String cleaned = integerArray.replaceAll(" ", "");
-            String[] elements = cleaned.split(",");
-            delete = new Integer[elements.length];
-            for (int i = 0; i < elements.length; i++) {
-                delete[i] = Integer.parseInt(elements[i]);
-            }
-            LOG.info("Parsed integer arguments: " + Arrays.toString(delete));
-        } catch (Exception e) {
+            delete = parseArray(integerArray);
+        } catch (NumberFormatException e) {
             LOG.error("Cannot parse list of integers!", e);
             return null;
         }
 
-        MathUpdate mu = new MathUpdate(delete, harvest);
+        // replace null by empty string to avoid null pointers
+        String secureHarvest = harvest == null ? "" : harvest;
+
+        MathUpdate mu = new MathUpdate(delete, secureHarvest);
         return mu.run();
+    }
+
+    /**
+     * Try to parse an integer array given as a string.
+     * If the given string is null or empty, or the string cannot be parsed
+     * it will return an empty array.
+     *
+     * @param integerArray
+     * @return
+     */
+    private Integer[] parseArray(String integerArray) throws NumberFormatException {
+        if (integerArray == null || integerArray.isEmpty()) {
+            return new Integer[0];
+        }
+
+        String cleaned = integerArray.replaceAll(" ", "");
+        String[] elements = cleaned.split(",");
+        Integer[] delete = new Integer[elements.length];
+        for (int i = 0; i < elements.length; i++) {
+            delete[i] = Integer.parseInt(elements[i]);
+        }
+
+        LOG.info("Parsed integer arguments: " + Arrays.toString(delete));
+        return delete;
     }
 
     @PostMapping("/countRev")
@@ -141,6 +164,43 @@ public class BaseXController {
         LOG.info("BaseX request to count total number of formulae from: " + request.getRemoteAddr());
         Client client = new Client();
         return client.countAllFormula();
+    }
+
+    @PostMapping("/restartBaseXServer")
+    @ApiOperation(value = "Restarts the BaseX server with another harvest file.")
+    public Response restart(
+            @RequestParam("Path") @ApiParam(
+                    name = "Path",
+                    value = "Path to harvest file (linux line separators)!",
+                    required = true)
+                    String harvestPath,
+            HttpServletRequest request) {
+        if (harvestPath == null || harvestPath.isEmpty()) {
+            return new Response(1, "Empty path! Didn't restart the server.");
+        }
+
+        String oldHarvest = baseXConfig.getHarvestPath();
+
+        try {
+            Path path = Paths.get(harvestPath);
+
+            if (!Files.exists(path)) {
+                return new Response(1, "Given file does not exist! Didn't restart server.");
+            }
+
+            baseXConfig.setHarvestPath(harvestPath);
+
+            BASEX_SERVER.startup(path.toFile());
+            return new Response(0, "Restarted BaseX server with harvest file " + path.toString());
+        } catch (InvalidPathException ipe) {
+            return new Response(1, "Cannot parse given string to a path, "
+                    + "didn't restart server! Reason: " + ipe.getReason());
+        } catch (IOException ioe) {
+            // reset settings
+            serverRunning = false;
+            baseXConfig.setHarvestPath(oldHarvest);
+            return new Response(1, "Cannot restart the BaseX server. " + ioe.toString());
+        }
     }
 
     private boolean startServerIfNecessary() {
