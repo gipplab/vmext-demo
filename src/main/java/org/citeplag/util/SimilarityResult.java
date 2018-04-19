@@ -1,6 +1,6 @@
 package org.citeplag.util;
 
-import com.formulasearchengine.mathmlsim.similarity.result.Match;
+import com.formulasearchengine.mathmltools.similarity.result.Match;
 
 import java.util.ArrayList;
 import java.util.HashMap;
