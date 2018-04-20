@@ -1,11 +1,11 @@
 package org.citeplag;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.formulasearchengine.mathmlconverters.cas.SaveTranslatorWrapper;
-import com.formulasearchengine.mathmlconverters.cas.TranslationResponse;
 import com.formulasearchengine.mathmlconverters.mathoid.EnrichedMathMLTransformer;
 import com.formulasearchengine.mathmlconverters.mathoid.MathoidConverter;
 import com.formulasearchengine.mathmltools.converters.LaTeXMLConverter;
+import com.formulasearchengine.mathmltools.converters.cas.SaveTranslatorWrapper;
+import com.formulasearchengine.mathmltools.converters.cas.TranslationResponse;
 import com.formulasearchengine.mathmltools.converters.services.LaTeXMLServiceResponse;
 import com.formulasearchengine.mathmltools.mml.elements.MathDoc;
 import com.formulasearchengine.mathmltools.similarity.MathPlag;
