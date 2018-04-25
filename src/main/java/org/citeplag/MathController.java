@@ -1,13 +1,16 @@
 package org.citeplag;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.formulasearchengine.mathmlconverters.mathoid.EnrichedMathMLTransformer;
-import com.formulasearchengine.mathmlconverters.mathoid.MathoidConverter;
 import com.formulasearchengine.mathmltools.converters.LaTeXMLConverter;
+import com.formulasearchengine.mathmltools.converters.MathoidConverter;
 import com.formulasearchengine.mathmltools.converters.cas.SaveTranslatorWrapper;
 import com.formulasearchengine.mathmltools.converters.cas.TranslationResponse;
+import com.formulasearchengine.mathmltools.converters.mathoid.EnrichedMathMLTransformer;
+import com.formulasearchengine.mathmltools.converters.mathoid.MathoidEndpoints;
+import com.formulasearchengine.mathmltools.converters.mathoid.MathoidInfoResponse;
 import com.formulasearchengine.mathmltools.converters.services.LaTeXMLServiceResponse;
 import com.formulasearchengine.mathmltools.mml.elements.MathDoc;
+import com.formulasearchengine.mathmltools.nativetools.NativeResponse;
 import com.formulasearchengine.mathmltools.similarity.MathPlag;
 import com.formulasearchengine.mathmltools.similarity.result.Match;
 import com.google.common.collect.Maps;
@@ -19,8 +22,12 @@ import org.citeplag.config.LaTeXMLRemoteConfig;
 import org.citeplag.config.MathoidConfig;
 import org.citeplag.util.Example;
 import org.citeplag.util.ExampleLoader;
+import org.citeplag.util.MathoidRequest;
 import org.citeplag.util.SimilarityResult;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.ResourceAccessException;
 import org.xml.sax.SAXException;
@@ -33,6 +40,7 @@ import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -50,7 +58,9 @@ import java.util.Map;
 @RequestMapping("/math")
 public class MathController {
 
+    private static final String HEADER_HASH_KEY = "x-resource-location";
     private static Logger logger = Logger.getLogger(MathController.class);
+    private static HashMap<String, MathoidRequest> incomeCache = new HashMap<>();
 
     @Autowired
     private MathoidConfig mathoidConfig;
@@ -60,6 +70,26 @@ public class MathController {
 
     @Autowired
     private CASTranslatorConfig translatorConfig;
+
+    private static HttpHeaders buildResponseHeader(String hash) {
+        HttpHeaders header = new HttpHeaders();
+        header.setContentType(MediaType.APPLICATION_JSON_UTF8);
+        header.set(HEADER_HASH_KEY, hash);
+        return header;
+    }
+
+    private static MathoidEndpoints getEndpoint(String type) {
+        switch (type) {
+            case "svg":
+                return MathoidEndpoints.SVG_ENDPOINT;
+            case "mml":
+                return MathoidEndpoints.MML_ENDPOINT;
+            case "png":
+                return MathoidEndpoints.PNG_ENDPOINT;
+            default:
+                return null;
+        }
+    }
 
     /**
      * POST method for calling the LaTeXML service / installation.
@@ -236,5 +266,97 @@ public class MathController {
     public Example getExample() throws IOException {
         // this could easily be extended for more examples
         return new ExampleLoader().load("euler");
+    }
+
+    @PostMapping("/check/{type}")
+    @ApiOperation(value = "Checks the supplied TeX formula for correctness and returns the normalised formula representation as well as information about identifiers.")
+    public HttpEntity<MathoidInfoResponse> mathoidCheck(
+            @PathVariable
+            @ApiParam(
+                    allowableValues = "tex, inline-tex, chem, pmml, ascii",
+                    value = "The input type of the given formula; can be tex or inline-tex",
+                    defaultValue = "tex",
+                    required = true)
+                    String type,
+            @RequestParam
+            @ApiParam(
+                    name = "q",
+                    value = "The formula to check",
+                    required = true)
+                    String q
+    ) {
+        MathoidRequest request = new MathoidRequest(q, type);
+        String hash = request.sha1Hash();
+        incomeCache.put(hash, request);
+
+        MathoidInfoResponse mathoidResp = new MathoidInfoResponse();
+        mathoidResp.setSuccess(true);
+        mathoidResp.setChecked(request.getValue());
+
+        HttpHeaders header = buildResponseHeader(hash);
+        return new HttpEntity<>(mathoidResp, header);
+    }
+
+    @GetMapping("/formula/{hash}")
+    @ApiOperation(value = "Returns the previously-stored formula via /check/{type} for the given hash.")
+    public HttpEntity<MathoidRequest> mathoidGetFormula(
+            @PathVariable
+            @ApiParam(
+                    name = "hash",
+                    value = "The input type of the given formula; can be tex or inline-tex",
+                    required = true)
+                    String hash
+    ) {
+        HttpHeaders header = buildResponseHeader(hash);
+        return new HttpEntity<>(incomeCache.get(hash), header);
+    }
+
+    @GetMapping("/render/{format}/{hash}")
+    @ApiOperation(value = "Given a request hash, renders a TeX formula into its mathematic representation in the given format.")
+    public HttpEntity<String> mathoidRender(
+            @PathVariable
+            @ApiParam(
+                    allowableValues = "svg, mml, png",
+                    name = "format",
+                    value = "The output format; can be svg or mml",
+                    required = true)
+                    String format,
+            @PathVariable
+            @ApiParam(
+                    name = "hash",
+                    value = "The hash string of the previous POST data",
+                    required = true)
+                    String hash,
+            HttpServletRequest request
+    ) {
+        MathoidRequest mathoidrequest = incomeCache.get(hash);
+
+        // TODO HttpEntity error
+        if (mathoidrequest == null) {
+            return null;
+        }
+
+        String result;
+        MathoidEndpoints endpoint;
+
+        if (format.equals("mml")) { // use latexml
+            LaTeXMLConverter laTeXMLConverter = new LaTeXMLConverter(laTeXMLRemoteConfig);
+            laTeXMLConverter.semanticMode();
+            Path p = Paths.get(laTeXMLRemoteConfig.getContentPath());
+            laTeXMLConverter.redirectLatex(p);
+
+            logger.info("Call LaTeXML locally requested from: " + request.getRemoteAddr());
+            NativeResponse nr = laTeXMLConverter.parseToNativeResponse(mathoidrequest.getValue());
+            result = nr.getResult();
+            endpoint = MathoidEndpoints.SVG_ENDPOINT;
+        } else {
+            endpoint = getEndpoint(format);
+            MathoidConverter converter = new MathoidConverter(mathoidConfig);
+            result = converter.conversion(endpoint, mathoidrequest.getValue());
+        }
+
+        HttpHeaders header = buildResponseHeader(hash);
+        header.set("content-type", endpoint.getResponseMediaType());
+        return new HttpEntity<>(result, header);
     }
 }

@@ -10,5 +10,5 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @ConfigurationProperties(prefix = "mathoid")
-public class MathoidConfig extends com.formulasearchengine.mathmlconverters.mathoid.MathoidConfig {
+public class MathoidConfig extends com.formulasearchengine.mathmltools.converters.config.MathoidConfig {
 }
