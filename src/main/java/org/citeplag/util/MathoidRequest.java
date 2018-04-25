@@ -4,12 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.formulasearchengine.mathmltools.converters.mathoid.MathoidTypes;
-import com.google.common.base.Charsets;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.util.Arrays;
 
 /**
  * @author Andre Greiner-Petter
@@ -18,7 +15,7 @@ import java.util.Arrays;
 public class MathoidRequest {
     private static final Logger LOG = LogManager.getLogger(MathoidRequest.class.getName());
 
-    private static final String jsonFormat = "{\"q\":\"%s\",\"type\":\"%s\"}";
+    private static final String JSON_FORMAT = "{\"q\":\"%s\",\"type\":\"%s\"}";
 
     @JsonProperty("q")
     private String q;
@@ -34,6 +31,16 @@ public class MathoidRequest {
         this.type = type;
     }
 
+//    public static void main(String[] args) {
+//        MathoidRequest r = new MathoidRequest("c^2 = a^2 + b^2", "tex");
+//        r.sha1Hash();
+//        System.out.println(DigestUtils.sha1Hex("{\"q\":\"c^2 = a^2 + b^2\",\"type\":\"tex\"}"));
+//        System.out.println(DigestUtils.sha1Hex("{\"q\":\"qwertz\",\"type\":\"tex\"}"));
+//        String s = "{\"success\":true,\"checked\":\"a^{2}=b^{2}+c^{2}\",\"requiredPackages\":[],\"identifiers\":[\"a\",\"b\",\"c\"],\"endsWithDot\":false}";
+//        System.out.println(DigestUtils.sha1Hex(s));
+//        System.out.println(DigestUtils.sha1Hex("{\"q\":\"a^{2}=b^{2}+c^{2}\",\"type\":\"tex\"}"));
+//    }
+
     @JsonIgnore
     public String getValue() {
         return q;
@@ -45,6 +52,7 @@ public class MathoidRequest {
 
     /**
      * Base on https://github.com/wikimedia/mathoid/blob/master/lib/math.js#L204-L223
+     *
      * @return mathoid type
      */
     @JsonIgnore
@@ -64,38 +72,17 @@ public class MathoidRequest {
                 return MathoidTypes.MML;
             case "chem":
                 return MathoidTypes.CHEM;
-            default: return null;
+            default:
+                return null;
         }
     }
 
     @Override
     public String toString() {
-        return String.format(jsonFormat, q, type);
+        return String.format(JSON_FORMAT, q, type);
     }
 
     public String sha1Hash() {
         return DigestUtils.sha1Hex(toString());
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) {
-            return true;
-        }
-        if (!(obj instanceof MathoidRequest)) {
-            return false;
-        }
-        MathoidRequest mreq = (MathoidRequest) obj;
-        return this.q.equals(mreq.q) && this.type.equals(mreq.type);
-    }
-
-    public static void main(String[] args){
-        MathoidRequest r = new MathoidRequest("c^2 = a^2 + b^2", "tex");
-        r.sha1Hash();
-        System.out.println(DigestUtils.sha1Hex("{\"q\":\"c^2 = a^2 + b^2\",\"type\":\"tex\"}"));
-        System.out.println(DigestUtils.sha1Hex("{\"q\":\"qwertz\",\"type\":\"tex\"}"));
-        String s = "{\"success\":true,\"checked\":\"a^{2}=b^{2}+c^{2}\",\"requiredPackages\":[],\"identifiers\":[\"a\",\"b\",\"c\"],\"endsWithDot\":false}";
-        System.out.println(DigestUtils.sha1Hex(s));
-        System.out.println(DigestUtils.sha1Hex("{\"q\":\"a^{2}=b^{2}+c^{2}\",\"type\":\"tex\"}"));
     }
 }
