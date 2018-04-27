@@ -9,10 +9,11 @@ import com.formulasearchengine.mathmltools.converters.mathoid.EnrichedMathMLTran
 import com.formulasearchengine.mathmltools.converters.mathoid.MathoidEndpoints;
 import com.formulasearchengine.mathmltools.converters.mathoid.MathoidInfoResponse;
 import com.formulasearchengine.mathmltools.converters.services.LaTeXMLServiceResponse;
+import com.formulasearchengine.mathmltools.io.XmlDocumentWriter;
 import com.formulasearchengine.mathmltools.mml.elements.MathDoc;
-import com.formulasearchengine.mathmltools.nativetools.NativeResponse;
 import com.formulasearchengine.mathmltools.similarity.MathPlag;
 import com.formulasearchengine.mathmltools.similarity.result.Match;
+import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -20,16 +21,12 @@ import org.apache.log4j.Logger;
 import org.citeplag.config.CASTranslatorConfig;
 import org.citeplag.config.LaTeXMLRemoteConfig;
 import org.citeplag.config.MathoidConfig;
-import org.citeplag.util.Example;
-import org.citeplag.util.ExampleLoader;
-import org.citeplag.util.MathoidRequest;
-import org.citeplag.util.SimilarityResult;
+import org.citeplag.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.ResourceAccessException;
+import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -60,7 +57,9 @@ public class MathController {
 
     private static final String HEADER_HASH_KEY = "x-resource-location";
     private static Logger logger = Logger.getLogger(MathController.class);
-    private static HashMap<String, MathoidRequest> incomeCache = new HashMap<>();
+
+    private static HashMap<String, String> requestHashesTable = new HashMap<>();
+    private static HashMap<String, MMLEndpointCache> responseHashesTable = new HashMap<>();
 
     @Autowired
     private MathoidConfig mathoidConfig;
@@ -284,22 +283,60 @@ public class MathController {
                     value = "The formula to check",
                     required = true)
                     String q
-    ) {
+    ) { // TODO we still ignore the request type!
+        // check if the request has already been made
         MathoidRequest request = new MathoidRequest(q, type);
-        String hash = request.sha1Hash();
-        incomeCache.put(hash, request);
+        String reqHash = request.sha1Hash();
+
+        String knownHash = requestHashesTable.get(reqHash);
+        // the hash is known -> there must be an object
+        if (knownHash != null) {
+            MMLEndpointCache cacheObj = responseHashesTable.get(knownHash);
+            // if this object is null -> the cache is broken
+            MathoidInfoResponse resp = cacheObj.getCorrespondingResponse();
+            // knownHash is the hash of the result -> put it to the headre
+            HttpHeaders header = buildResponseHeader(knownHash);
+            return new HttpEntity<>(resp, header);
+        }
+
+        // the element is not in the cache -> send it to LaTeXML and create response
+        // setup latexml
+        LaTeXMLConverter latexml = new LaTeXMLConverter(laTeXMLRemoteConfig);
+        latexml.semanticMode();
+        Path p = Paths.get(laTeXMLRemoteConfig.getContentPath());
+        latexml.redirectLatex(p);
+
+        // parse requested expression
+        Document mmlDoc = latexml.parse(q);
+        String rawTex = mmlDoc.getDocumentElement().getAttribute("alttext");
+        if (rawTex == null || rawTex.isEmpty()) {
+            rawTex = q; // if we cannot extract alttext -> take the original input
+        }
+
+        MathoidRequest cleanedRequest = new MathoidRequest(rawTex, type);
+        String respHash = cleanedRequest.sha1Hash();
 
         MathoidInfoResponse mathoidResp = new MathoidInfoResponse();
         mathoidResp.setSuccess(true);
-        mathoidResp.setChecked(request.getValue());
+        mathoidResp.setChecked(rawTex);
+        mathoidResp.setEndsWithDots(q.endsWith("\\s*\\.\\s*"));
 
-        HttpHeaders header = buildResponseHeader(hash);
+        // create cache element
+        MMLEndpointCache newCacheEntry = new MMLEndpointCache(cleanedRequest, mathoidResp);
+        newCacheEntry.setMml(mmlDoc);
+
+        // linking hashes and add element to hash tables
+        requestHashesTable.put(reqHash, respHash);
+        responseHashesTable.put(respHash, newCacheEntry);
+
+        // send hash of answer back
+        HttpHeaders header = buildResponseHeader(respHash);
         return new HttpEntity<>(mathoidResp, header);
     }
 
     @GetMapping("/formula/{hash}")
     @ApiOperation(value = "Returns the previously-stored formula via /check/{type} for the given hash.")
-    public HttpEntity<MathoidRequest> mathoidGetFormula(
+    public HttpEntity mathoidGetFormula(
             @PathVariable
             @ApiParam(
                     name = "hash",
@@ -307,13 +344,20 @@ public class MathController {
                     required = true)
                     String hash
     ) {
+        // try to get cache element from hash -> NullPointerException will be thrown -> Results in 404
+        MMLEndpointCache cache = responseHashesTable.get(hash);
+
+        if (cache == null) {
+            return new ResponseEntity<>("Unknown Hash", HttpStatus.NOT_FOUND);
+        }
+
         HttpHeaders header = buildResponseHeader(hash);
-        return new HttpEntity<>(incomeCache.get(hash), header);
+        return new HttpEntity<>(cache.getOriginalRequest(), header);
     }
 
     @GetMapping("/render/{format}/{hash}")
     @ApiOperation(value = "Given a request hash, renders a TeX formula into its mathematic representation in the given format.")
-    public HttpEntity<String> mathoidRender(
+    public HttpEntity mathoidRender(
             @PathVariable
             @ApiParam(
                     allowableValues = "svg, mml, png",
@@ -329,34 +373,48 @@ public class MathController {
                     String hash,
             HttpServletRequest request
     ) {
-        MathoidRequest mathoidrequest = incomeCache.get(hash);
+        MMLEndpointCache cacheEntry = responseHashesTable.get(hash);
 
-        // TODO HttpEntity error
-        if (mathoidrequest == null) {
-            return null;
-        }
-
-        String result;
-        MathoidEndpoints endpoint;
-
-        if (format.equals("mml")) { // use latexml
-            LaTeXMLConverter laTeXMLConverter = new LaTeXMLConverter(laTeXMLRemoteConfig);
-            laTeXMLConverter.semanticMode();
-            Path p = Paths.get(laTeXMLRemoteConfig.getContentPath());
-            laTeXMLConverter.redirectLatex(p);
-
-            logger.info("Call LaTeXML locally requested from: " + request.getRemoteAddr());
-            NativeResponse nr = laTeXMLConverter.parseToNativeResponse(mathoidrequest.getValue());
-            result = nr.getResult();
-            endpoint = MathoidEndpoints.SVG_ENDPOINT;
-        } else {
-            endpoint = getEndpoint(format);
-            MathoidConverter converter = new MathoidConverter(mathoidConfig);
-            result = converter.conversion(endpoint, mathoidrequest.getValue());
+        if (cacheEntry == null) {
+            return new ResponseEntity<>("Unknown Hash", HttpStatus.NOT_FOUND);
         }
 
         HttpHeaders header = buildResponseHeader(hash);
-        header.set("content-type", endpoint.getResponseMediaType());
-        return new HttpEntity<>(result, header);
+        MathoidConverter converter = new MathoidConverter(mathoidConfig);
+        String tex = cacheEntry.getCorrespondingResponse().getChecked();
+
+        switch (format) {
+            case "svg":
+                String svg = cacheEntry.getSvg();
+                if (svg == null) { // not existing yet? Render it!
+                    svg = converter.conversion(MathoidEndpoints.SVG_ENDPOINT, tex);
+                    cacheEntry.setSvg(svg);
+                }
+
+                header.set("content-type", MathoidEndpoints.SVG_ENDPOINT.getResponseMediaType());
+                return new HttpEntity<>(svg, header);
+            case "png":
+                byte[] png = cacheEntry.getPng();
+                if (png == null) { // not existing yet? Render it!
+                    png = converter.conversion(MathoidEndpoints.PNG_ENDPOINT, tex).getBytes(Charsets.UTF_8);
+                    cacheEntry.setPng(png);
+                }
+
+                header.set("content-type", MathoidEndpoints.PNG_ENDPOINT.getResponseMediaType());
+                return new HttpEntity<>(png, header);
+            case "mml":
+                Document doc = cacheEntry.getMml();
+                // cannot be null, was created in check!
+                try {
+                    String mml = XmlDocumentWriter.stringify(doc);
+                    header.set("content-type", MathoidEndpoints.MML_ENDPOINT.getResponseMediaType());
+                    return new HttpEntity<>(mml, header);
+                } catch (IOException ioe) {
+                    logger.error("Cannot stringify MML.", ioe);
+                    return new HttpEntity<>("Cannot stringify MML.", header);
+                }
+            default:
+                return new ResponseEntity<>("Unknown Format", HttpStatus.BAD_REQUEST);
+        }
     }
 }
