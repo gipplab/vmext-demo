@@ -3,7 +3,6 @@ package org.citeplag;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.formulasearchengine.mathmltools.converters.LaTeXMLConverter;
 import com.formulasearchengine.mathmltools.converters.MathoidConverter;
-import com.formulasearchengine.mathmltools.converters.cas.SaveTranslatorWrapper;
 import com.formulasearchengine.mathmltools.converters.cas.TranslationResponse;
 import com.formulasearchengine.mathmltools.converters.mathoid.EnrichedMathMLTransformer;
 import com.formulasearchengine.mathmltools.converters.mathoid.MathoidEndpoints;
@@ -24,11 +23,13 @@ import org.citeplag.config.MathoidConfig;
 import org.citeplag.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.ResourceAccessException;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
@@ -54,10 +55,11 @@ import java.util.Map;
 @RestController
 @RequestMapping("/math")
 public class MathController {
-
+    // Header entry to provide hash values in the response
     private static final String HEADER_HASH_KEY = "x-resource-location";
+    // Logging via Log4j2
     private static Logger logger = Logger.getLogger(MathController.class);
-
+    // Caches for Mathoid Requests
     private static HashMap<String, String> requestHashesTable = new HashMap<>();
     private static HashMap<String, MMLEndpointCache> responseHashesTable = new HashMap<>();
 
@@ -87,6 +89,16 @@ public class MathController {
                 return MathoidEndpoints.PNG_ENDPOINT;
             default:
                 return null;
+        }
+    }
+
+    @PostConstruct
+    public void init() {
+        logger.info("Construct translators.");
+        try {
+            CASTranslators.init(translatorConfig);
+        } catch (Exception e) {
+            logger.warn("Cannot construct translators.", e);
         }
     }
 
@@ -164,27 +176,25 @@ public class MathController {
         return response;
     }
 
+    @InitBinder("cas")
+    public void initBinder(WebDataBinder dataBinder) {
+        dataBinder.registerCustomEditor(CASTranslators.class, new CASTranslatorsBinder());
+    }
+
     @PostMapping("/translation")
     @ApiOperation(value = "Translates a semantic LaTeX string to a given CAS.")
     public TranslationResponse translation(
-            @RequestParam()
-            @ApiParam(allowableValues = "Maple, Mathematica", required = true)
-                    String cas,
+            @RequestParam() CASTranslators cas,
             @RequestParam() String latex,
             HttpServletRequest request
     ) {
-        logger.info("translation process to " + cas + " from: " + request.getRemoteAddr());
-        SaveTranslatorWrapper translator = new SaveTranslatorWrapper();
+        logger.info("Start translation process to " + cas + " from: " + request.getRemoteAddr());
+
         try {
-            translator.init(
-                    translatorConfig.getJarPath(),
-                    cas,
-                    translatorConfig.getReferencesPath()
-            );
-            translator.translate(latex);
-            return translator.getTranslationResult();
+            cas.getTranslator().translate(latex);
+            return cas.getTranslator().getTranslationResult();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.warn("Error due translation for " + latex, e);
             String errorMsg = "[ERROR] " + e.toString();
             TranslationResponse response = new TranslationResponse();
             response.setLog(errorMsg);
