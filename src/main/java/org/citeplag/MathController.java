@@ -41,6 +41,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * REST Controller for our little MathML Pipeline.
@@ -55,13 +56,14 @@ import java.util.Map;
 @RestController
 @RequestMapping("/math")
 public class MathController {
+    private static Logger logger = Logger.getLogger(MathController.class);
+
     // Header entry to provide hash values in the response
     private static final String HEADER_HASH_KEY = "x-resource-location";
-    // Logging via Log4j2
-    private static Logger logger = Logger.getLogger(MathController.class);
+
     // Caches for Mathoid Requests
-    private static HashMap<String, String> requestHashesTable = new HashMap<>();
-    private static HashMap<String, MMLEndpointCache> responseHashesTable = new HashMap<>();
+    private static Map<String, String> requestHashesTable = new ConcurrentHashMap<>(new HashMap<>());
+    private static Map<String, MMLEndpointCache> responseHashesTable = new ConcurrentHashMap<>(new HashMap<>());
 
     @Autowired
     private MathoidConfig mathoidConfig;
@@ -94,8 +96,8 @@ public class MathController {
 
     @PostConstruct
     public void init() {
-        logger.info("Construct translators.");
         try {
+            logger.info("Construct translators.");
             CASTranslators.init(translatorConfig);
         } catch (Exception e) {
             logger.warn("Cannot construct translators.", e);
@@ -193,6 +195,10 @@ public class MathController {
         try {
             cas.getTranslator().translate(latex);
             return cas.getTranslator().getTranslationResult();
+        } catch (NullPointerException npe) {
+            TranslationResponse response = new TranslationResponse();
+            response.setLog("Unknown CAS!");
+            return response;
         } catch (Exception e) {
             logger.warn("Error due translation for " + latex, e);
             String errorMsg = "[ERROR] " + e.toString();

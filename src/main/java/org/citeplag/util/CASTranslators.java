@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.formulasearchengine.mathmltools.converters.cas.SaveTranslatorWrapper;
 import org.citeplag.config.CASTranslatorConfig;
 
+import java.util.Arrays;
+
 /**
  * @author Andre Greiner-Petter
  */
@@ -43,13 +45,11 @@ public enum CASTranslators {
      * @return corresponding enum object for CAS translator
      */
     public static CASTranslators getTranslatorType(String cas) {
-        for (CASTranslators ct : CASTranslators.values()) {
-            if (cas.equals(ct.cas)) {
-                return ct;
-            }
-        }
-
-        return null;
+        return Arrays
+                .stream(CASTranslators.values())
+                .filter(e -> e.cas.equals(cas))
+                .findFirst()
+                .orElse(null);
     }
 
     @JsonIgnore
