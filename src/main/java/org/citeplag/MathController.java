@@ -5,36 +5,25 @@ import com.formulasearchengine.mathmltools.converters.LaTeXMLConverter;
 import com.formulasearchengine.mathmltools.converters.MathoidConverter;
 import com.formulasearchengine.mathmltools.converters.cas.TranslationResponse;
 import com.formulasearchengine.mathmltools.converters.mathoid.EnrichedMathMLTransformer;
-import com.formulasearchengine.mathmltools.converters.mathoid.MathoidEndpoints;
-import com.formulasearchengine.mathmltools.converters.mathoid.MathoidInfoResponse;
 import com.formulasearchengine.mathmltools.converters.services.LaTeXMLServiceResponse;
-import com.formulasearchengine.mathmltools.io.XmlDocumentWriter;
 import com.formulasearchengine.mathmltools.mml.elements.MathDoc;
 import com.formulasearchengine.mathmltools.similarity.MathPlag;
 import com.formulasearchengine.mathmltools.similarity.result.Match;
-import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 import org.apache.log4j.Logger;
 import org.citeplag.config.CASTranslatorConfig;
 import org.citeplag.config.LaTeXMLRemoteConfig;
 import org.citeplag.config.MathoidConfig;
-import org.citeplag.config.MediaController;
 import org.citeplag.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -42,10 +31,8 @@ import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * REST Controller for our little MathML Pipeline.
