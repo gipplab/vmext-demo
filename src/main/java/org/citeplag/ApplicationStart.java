@@ -82,7 +82,8 @@ public class ApplicationStart {
         return or(
                 regex("/math.*"),
                 regex("/config.*"),
-                regex("/basex.*")
+                regex("/basex.*"),
+                regex("/v1/media.*")
         );
     }
 
