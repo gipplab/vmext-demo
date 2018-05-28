@@ -1,7 +1,6 @@
 package org.citeplag.util;
 
 import com.formulasearchengine.mathmltools.converters.mathoid.MathoidInfoResponse;
-import org.w3c.dom.Document;
 
 /**
  * @author Andre Greiner-Petter
@@ -12,7 +11,7 @@ public class MMLEndpointCache {
     private MathoidInfoResponse correspondingResponse;
 
     // The mml as string
-    private Document mml;
+    private String mml;
 
     // The SVG image as string
     private String svg;
@@ -33,11 +32,11 @@ public class MMLEndpointCache {
         return correspondingResponse;
     }
 
-    public Document getMml() {
+    public String getMml() {
         return mml;
     }
 
-    public void setMml(Document mml) {
+    public void setMml(String mml) {
         this.mml = mml;
     }
 

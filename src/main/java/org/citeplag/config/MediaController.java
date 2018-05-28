@@ -4,6 +4,7 @@ import com.formulasearchengine.mathmltools.converters.LaTeXMLConverter;
 import com.formulasearchengine.mathmltools.converters.MathoidConverter;
 import com.formulasearchengine.mathmltools.converters.mathoid.MathoidEndpoints;
 import com.formulasearchengine.mathmltools.converters.mathoid.MathoidInfoResponse;
+import com.formulasearchengine.mathmltools.converters.mathoid.MathoidTypes;
 import com.formulasearchengine.mathmltools.io.XmlDocumentWriter;
 import com.google.common.base.Charsets;
 import io.swagger.annotations.ApiOperation;
@@ -83,7 +84,7 @@ public class MediaController {
                     value = "The formula to check",
                     required = true)
                     String q
-    ) { // TODO we still ignore the request type!
+    ) throws IOException { // TODO we still ignore the request type!
         // check if the request has already been made
         MathoidRequest request = new MathoidRequest(q, type);
         String reqHash = request.sha1Hash();
@@ -107,8 +108,9 @@ public class MediaController {
         latexml.redirectLatex(p);
 
         // parse requested expression
-        Document mmlDoc = latexml.parse(q);
+        Document mmlDoc = latexml.convertToDoc(q);
         String rawTex = mmlDoc.getDocumentElement().getAttribute("alttext");
+        String mml = XmlDocumentWriter.stringify(mmlDoc);
         if (rawTex == null || rawTex.isEmpty()) {
             rawTex = q; // if we cannot extract alttext -> take the original input
         }
@@ -123,7 +125,7 @@ public class MediaController {
 
         // create cache element
         MMLEndpointCache newCacheEntry = new MMLEndpointCache(cleanedRequest, mathoidResp);
-        newCacheEntry.setMml(mmlDoc);
+        newCacheEntry.setMml(mml);
 
         // linking hashes and add element to hash tables
         requestHashesTable.put(reqHash, respHash);
@@ -181,13 +183,13 @@ public class MediaController {
 
         HttpHeaders header = buildResponseHeader(hash);
         MathoidConverter converter = new MathoidConverter(mathoidConfig);
-        String tex = cacheEntry.getCorrespondingResponse().getChecked();
+        String mml = cacheEntry.getMml();
 
         switch (format) {
             case "svg":
                 String svg = cacheEntry.getSvg();
                 if (svg == null) { // not existing yet? Render it!
-                    svg = converter.conversion(MathoidEndpoints.SVG_ENDPOINT, tex);
+                    svg = converter.conversion(MathoidEndpoints.SVG_ENDPOINT, mml, MathoidTypes.MML);
                     cacheEntry.setSvg(svg);
                 }
 
@@ -196,23 +198,16 @@ public class MediaController {
             case "png":
                 byte[] png = cacheEntry.getPng();
                 if (png == null) { // not existing yet? Render it!
-                    png = converter.conversion(MathoidEndpoints.PNG_ENDPOINT, tex).getBytes(Charsets.UTF_8);
+                    png = converter.conversion(MathoidEndpoints.PNG_ENDPOINT, mml, MathoidTypes.MML)
+                            .getBytes(Charsets.UTF_8);
                     cacheEntry.setPng(png);
                 }
 
                 header.set("content-type", MathoidEndpoints.PNG_ENDPOINT.getResponseMediaType());
                 return new HttpEntity<>(png, header);
             case "mml":
-                Document doc = cacheEntry.getMml();
-                // cannot be null, was created in check!
-                try {
-                    String mml = XmlDocumentWriter.stringify(doc);
-                    header.set("content-type", MathoidEndpoints.MML_ENDPOINT.getResponseMediaType());
-                    return new HttpEntity<>(mml, header);
-                } catch (IOException ioe) {
-                    LOG.error("Cannot stringify MML.", ioe);
-                    return new HttpEntity<>("Cannot stringify MML.", header);
-                }
+                header.set("content-type", MathoidEndpoints.MML_ENDPOINT.getResponseMediaType());
+                return new HttpEntity<>(mml, header);
             default:
                 return new ResponseEntity<>("Unknown Format", HttpStatus.BAD_REQUEST);
         }
