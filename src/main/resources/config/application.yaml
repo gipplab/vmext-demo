@@ -5,41 +5,16 @@ server:
 # Math AST Renderer - Main URL
 mast.url: https://vmext.wmflabs.org/
 
-# the use of the latexml online service (via url) is optional
-# if service is not found or configured properly fallback is the local latexml installation
+# the latexml config is given from MathMLTools!
 latexml:
-  active: true
-  # has to be set to the localhost service port 9999 if you run this on drmf-beta.
-  url: https://drmf-latexml.wmflabs.org # set a url if you want the option of the online service
-  params:                             # parameters for the online service
-    whatsin: math
-    whatsout: math
-    includestyles:
-    format: xhtml
-    pmml:
-    cmml:
-    nodefaultresources:
-    linelength: 90
-    mathtex:
-    quiet:
-    stylesheet: "DRMF.xsl"
-    preload:
-      - "LaTeX.pool"
-      - "article.cls"
-      - "amsmath.sty"
-      - "amsthm.sty"
-      - "amstext.sty"
-      - "amssymb.sty"
-      - "eucal.sty"
-      - "DLMFmath.sty"
-      - "DRMFfcns.sty"
-      - "[dvipsnames]xcolor.sty"
-      - "url.sty"
-      - "hyperref.sty"
-      - "[ids]latexml.sty"
-      - "texvc"
-      - "wikidata.sty"
-      - "mleftright.sty"
+  # use this config to control whether latexml should be called locally or remote
+  remote: false
+  # set special url if remote is true
+  # url: https://drmf-latexml.wmflabs.org
+  # set this option if you want to parse tex with semantic macros (default is true)
+  content: true
+  # if 'content' is true, specify the path to the macros
+  contentPath: ~/Projects/DRMF
 
 # Mathoid - alternative Latex to MathML converter
 mathoid:

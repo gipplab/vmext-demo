@@ -1,5 +1,6 @@
 package org.citeplag;
 
+import com.formulasearchengine.mathmltools.converters.config.LaTeXMLConfig;
 import io.swagger.annotations.ApiOperation;
 import org.citeplag.config.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +20,10 @@ import javax.servlet.http.HttpServletRequest;
 public class ConfigController {
 
     @Autowired
-    private MathASTConfig mathASTConfig;
+    private LaTeXMLRemoteConfig laTeXMLRemoteConfig;
 
     @Autowired
-    private LateXMLConfig lateXMLConfig;
+    private MathASTConfig mathASTConfig;
 
     @Autowired
     private MathoidConfig mathoidConfig;
@@ -41,8 +42,8 @@ public class ConfigController {
 
     @GetMapping("latexml")
     @ApiOperation(value = "Show the current default LaTeXML configuration")
-    public LateXMLConfig getLaTeXMLConfig(HttpServletRequest request) throws Exception {
-        return lateXMLConfig;
+    public LaTeXMLConfig getLaTeXMLConfig(HttpServletRequest request) throws Exception {
+        return laTeXMLRemoteConfig;
     }
 
     @GetMapping("mast")

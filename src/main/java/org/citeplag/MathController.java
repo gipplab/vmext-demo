@@ -1,36 +1,35 @@
 package org.citeplag;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.formulasearchengine.mathmlconverters.cas.SaveTranslatorWrapper;
-import com.formulasearchengine.mathmlconverters.cas.TranslationResponse;
-import com.formulasearchengine.mathmlconverters.latexml.LaTeXMLConverter;
-import com.formulasearchengine.mathmlconverters.latexml.LaTeXMLServiceResponse;
-import com.formulasearchengine.mathmlconverters.mathoid.EnrichedMathMLTransformer;
-import com.formulasearchengine.mathmlconverters.mathoid.MathoidConverter;
-import com.formulasearchengine.mathmlsim.similarity.MathPlag;
-import com.formulasearchengine.mathmlsim.similarity.result.Match;
+import com.formulasearchengine.mathmltools.converters.LaTeXMLConverter;
+import com.formulasearchengine.mathmltools.converters.MathoidConverter;
+import com.formulasearchengine.mathmltools.converters.cas.TranslationResponse;
+import com.formulasearchengine.mathmltools.converters.mathoid.EnrichedMathMLTransformer;
+import com.formulasearchengine.mathmltools.converters.services.LaTeXMLServiceResponse;
 import com.formulasearchengine.mathmltools.mml.elements.MathDoc;
+import com.formulasearchengine.mathmltools.similarity.MathPlag;
+import com.formulasearchengine.mathmltools.similarity.result.Match;
 import com.google.common.collect.Maps;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 import org.apache.log4j.Logger;
 import org.citeplag.config.CASTranslatorConfig;
-import org.citeplag.config.LateXMLConfig;
+import org.citeplag.config.LaTeXMLRemoteConfig;
 import org.citeplag.config.MathoidConfig;
-import org.citeplag.util.Example;
-import org.citeplag.util.ExampleLoader;
-import org.citeplag.util.SimilarityResult;
+import org.citeplag.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.StringUtils;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.ResourceAccessException;
 import org.xml.sax.SAXException;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -48,26 +47,34 @@ import java.util.Map;
 @RestController
 @RequestMapping("/math")
 public class MathController {
-
     private static Logger logger = Logger.getLogger(MathController.class);
-
-    @Autowired
-    private LateXMLConfig lateXMLConfig;
 
     @Autowired
     private MathoidConfig mathoidConfig;
 
+    @Autowired
+    private LaTeXMLRemoteConfig laTeXMLRemoteConfig;
 
     @Autowired
     private CASTranslatorConfig translatorConfig;
 
+    @PostConstruct
+    public void init() {
+        try {
+            logger.info("Construct translators.");
+            CASTranslators.init(translatorConfig);
+        } catch (Exception e) {
+            logger.warn("Cannot construct translators.", e);
+        }
+    }
+
     /**
      * POST method for calling the LaTeXML service / installation.
      *
-     * @param config  optional configuration, if null, system default will be used
+     * @param config   optional configuration, if null, system default will be used
      * @param rawLatex the original (generic) input tex format, needed if the latex parameter is semantic
-     * @param latex   latex to be converted
-     * @param request http request for logging
+     * @param latex    latex to be converted
+     * @param request  http request for logging
      * @return service response
      * @throws Exception anything that could go wrong
      */
@@ -80,21 +87,31 @@ public class MathController {
             HttpServletRequest request) throws Exception {
 
         // if request configuration is given, use it.
-        LateXMLConfig usedConfig = config != null
-                ? new ObjectMapper().readValue(config, LateXMLConfig.class)
-                : lateXMLConfig;
+        LaTeXMLRemoteConfig usedConfig = config != null
+                ? new ObjectMapper().readValue(config, LaTeXMLRemoteConfig.class)
+                : laTeXMLRemoteConfig;
 
         LaTeXMLConverter laTeXMLConverter = new LaTeXMLConverter(usedConfig);
 
-        // no url = use the local installation of latexml, otherwise use: url = online service
-        LaTeXMLServiceResponse response;
-        if (StringUtils.isEmpty(usedConfig.getUrl())) {
-            logger.info("local latex conversion from: " + request.getRemoteAddr());
-            response = laTeXMLConverter.runLatexmlc(latex);
+        if (usedConfig.isContent()) {
+            laTeXMLConverter.semanticMode();
+            Path p = Paths.get(usedConfig.getContentPath());
+            laTeXMLConverter.redirectLatex(p);
         } else {
-            logger.info("service latex conversion from: " + request.getRemoteAddr());
-            response = laTeXMLConverter.convertLatexmlService(latex);
+            laTeXMLConverter.nonSemanticMode();
         }
+
+        LaTeXMLServiceResponse response;
+        long time = System.currentTimeMillis();
+        if (usedConfig.isRemote()) {
+            logger.info("Call LaTeXML locally requested from: " + request.getRemoteAddr());
+            response = new LaTeXMLServiceResponse(laTeXMLConverter.parseToNativeResponse(latex));
+        } else {
+            logger.info("Call remote LaTeXML service from: " + request.getRemoteAddr());
+            response = laTeXMLConverter.parseAsService(latex);
+        }
+        time = System.currentTimeMillis() - time;
+        response.setLog(response.getLog() + " Time in MS: " + time);
 
         return postProcessingOnMML(rawLatex, response);
     }
@@ -125,27 +142,29 @@ public class MathController {
         return response;
     }
 
+    @InitBinder("cas")
+    public void initBinder(WebDataBinder dataBinder) {
+        dataBinder.registerCustomEditor(CASTranslators.class, new CASTranslatorsBinder());
+    }
+
     @PostMapping("/translation")
     @ApiOperation(value = "Translates a semantic LaTeX string to a given CAS.")
     public TranslationResponse translation(
-            @RequestParam()
-            @ApiParam(allowableValues = "Maple, Mathematica", required = true)
-                    String cas,
+            @RequestParam() CASTranslators cas,
             @RequestParam() String latex,
             HttpServletRequest request
     ) {
-        logger.info("translation process to " + cas + " from: " + request.getRemoteAddr());
-        SaveTranslatorWrapper translator = new SaveTranslatorWrapper();
+        logger.info("Start translation process to " + cas + " from: " + request.getRemoteAddr());
+
         try {
-            translator.init(
-                    translatorConfig.getJarPath(),
-                    cas,
-                    translatorConfig.getReferencesPath()
-            );
-            translator.translate(latex);
-            return translator.getTranslationResult();
+            cas.getTranslator().translate(latex);
+            return cas.getTranslator().getTranslationResult();
+        } catch (NullPointerException npe) {
+            TranslationResponse response = new TranslationResponse();
+            response.setLog("Unknown CAS!");
+            return response;
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.warn("Error due translation for " + latex, e);
             String errorMsg = "[ERROR] " + e.toString();
             TranslationResponse response = new TranslationResponse();
             response.setLog(errorMsg);
