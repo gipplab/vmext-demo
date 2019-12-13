@@ -1,0 +1,31 @@
+server:
+#  servlet-path: /pipe   # custom servlet-path
+  port: 8080            # default server port, if not set otherwise
+
+# Math AST Renderer - Main URL
+mast.url: https://vmext.wmflabs.org/
+
+# the latexml config is given from MathMLTools!
+latexml:
+  # use this config to control whether latexml should be called locally or remote
+  remote: true
+  # set special url if remote is true
+  # url: https://latexml.mediabotz.de/
+  url: https://drmf-latexml.wmflabs.org/convert
+  # set this option if you want to parse tex with semantic macros (default is true)
+  content: false
+  # if 'content' is true, specify the path to the macros
+  contentPath: /home/andreg-p/Projects/DRMF
+
+# Mathoid - alternative Latex to MathML converter
+mathoid:
+  active: true
+  url: http://localhost:10044/
+
+# change this to your local path of the translator program
+translator:
+  jarPath: "/home/andreg-p/Projects/latex-grammar/bin/latex-to-cas-translator.jar"
+  referencesPath: "/home/andreg-p/Projects/latex-grammar/libs/ReferenceData"
+
+basexserver:
+  harvestPath: "sampleHarvest.xml"

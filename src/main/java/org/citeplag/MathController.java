@@ -103,12 +103,12 @@ public class MathController {
 
         LaTeXMLServiceResponse response;
         long time = System.currentTimeMillis();
-        if (usedConfig.isRemote()) {
+        if (!usedConfig.isRemote()) {
             logger.info("Call LaTeXML locally requested from: " + request.getRemoteAddr());
             response = new LaTeXMLServiceResponse(laTeXMLConverter.parseToNativeResponse(latex));
         } else {
             logger.info("Call remote LaTeXML service from: " + request.getRemoteAddr());
-            response = laTeXMLConverter.parseAsService(latex);
+            response = laTeXMLConverter.parseAsService(latex, true);
         }
         time = System.currentTimeMillis() - time;
         response.setLog(response.getLog() + " Time in MS: " + time);
@@ -152,12 +152,13 @@ public class MathController {
     public TranslationResponse translation(
             @RequestParam() CASTranslators cas,
             @RequestParam() String latex,
+            @RequestParam(required = false) String label,
             HttpServletRequest request
     ) {
         logger.info("Start translation process to " + cas + " from: " + request.getRemoteAddr());
 
         try {
-            cas.getTranslator().translate(latex);
+            cas.getTranslator().translate(latex, label);
             return cas.getTranslator().getTranslationResult();
         } catch (NullPointerException npe) {
             TranslationResponse response = new TranslationResponse();

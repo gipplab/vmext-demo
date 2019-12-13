@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import org.w3c.dom.Document;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -110,7 +111,12 @@ public class MediaController {
         // parse requested expression
         Document mmlDoc = latexml.convertToDoc(q);
         String rawTex = mmlDoc.getDocumentElement().getAttribute("alttext");
-        String mml = XmlDocumentWriter.stringify(mmlDoc);
+        String mml = null;
+        try {
+            mml = XmlDocumentWriter.stringify(mmlDoc);
+        } catch (TransformerException e) {
+            e.printStackTrace();
+        }
         if (rawTex == null || rawTex.isEmpty()) {
             rawTex = q; // if we cannot extract alttext -> take the original input
         }
