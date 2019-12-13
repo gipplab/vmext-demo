@@ -85,7 +85,7 @@ public class MediaController {
                     value = "The formula to check",
                     required = true)
                     String q
-    ) throws IOException { // TODO we still ignore the request type!
+    ) throws IOException, javax.xml.transform.TransformerException { // TODO we still ignore the request type!
         // check if the request has already been made
         MathoidRequest request = new MathoidRequest(q, type);
         String reqHash = request.sha1Hash();
