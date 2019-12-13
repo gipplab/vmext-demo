@@ -24,8 +24,8 @@ mathoid:
 
 # change this to your local path of the translator program
 translator:
-  jarPath: "/home/andreg-p/Projects/latex-grammar/bin/latex-to-cas-translator.jar"
-  referencesPath: "/home/andreg-p/Projects/latex-grammar/libs/ReferenceData"
+  jarPath: "/bin/latex-to-cas-translator.jar"
+  referencesPath: "/libs/ReferenceData"
 
 basexserver:
   harvestPath: "sampleHarvest.xml"
