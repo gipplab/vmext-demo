@@ -12,7 +12,9 @@ import com.formulasearchengine.mathmltools.similarity.result.Match;
 import com.google.common.collect.Maps;
 import io.swagger.annotations.ApiOperation;
 import org.apache.log4j.Logger;
+import org.basex.query.expr.gflwor.For;
 import org.citeplag.config.CASTranslatorConfig;
+import org.citeplag.config.FormulaCloudConfig;
 import org.citeplag.config.LaTeXMLRemoteConfig;
 import org.citeplag.config.MathoidConfig;
 import org.citeplag.util.*;
@@ -58,11 +60,15 @@ public class MathController {
     @Autowired
     private CASTranslatorConfig translatorConfig;
 
+    @Autowired
+    private FormulaCloudConfig formulaCloudConfig;
+
     @PostConstruct
     public void init() {
         try {
             logger.info("Construct translators.");
             CASTranslators.init(translatorConfig);
+            FormulaCloud.init(formulaCloudConfig);
         } catch (Exception e) {
             logger.warn("Cannot construct translators.", e);
         }
@@ -170,6 +176,23 @@ public class MathController {
             TranslationResponse response = new TranslationResponse();
             response.setLog(errorMsg);
             return response;
+        }
+    }
+
+    @PostMapping("/searchmoi")
+    @ApiOperation(value = "Search for MOI by given search query.")
+    public String translation(
+            @RequestParam(required = true) String searchQuery,
+            HttpServletRequest request
+    ) {
+        logger.info("Start searching process for \"" + searchQuery + "\" from: " + request.getRemoteAddr());
+
+        try {
+            return FormulaCloud.search(searchQuery);
+        } catch (Exception e) {
+            logger.warn("Error due searching.", e);
+            String errorMsg = "[ERROR] " + e.toString();
+            return errorMsg;
         }
     }
 

@@ -94,6 +94,24 @@
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
         </dependency>
+
+        <dependency>
+            <groupId>org.basex</groupId>
+            <artifactId>basex</artifactId>
+            <version>9.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.basex</groupId>
+            <artifactId>basex-api</artifactId>
+            <version>9.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mir.formulacloud</groupId>
+            <artifactId>searcher</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <build>
