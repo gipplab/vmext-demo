@@ -61,7 +61,7 @@
         <dependency>
             <groupId>com.formulasearchengine.mathmltools</groupId>
             <artifactId>mathml-converters</artifactId>
-            <version>2.0.2</version>
+            <version>2.0.4</version>
         </dependency>
 
         <dependency>
