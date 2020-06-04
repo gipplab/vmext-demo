@@ -1,6 +1,5 @@
 package org.citeplag.util;
 
-import mir.formulacloud.searcher.OpenAccessSearcher;
 import org.citeplag.config.FormulaCloudConfig;
 
 /**
@@ -8,16 +7,16 @@ import org.citeplag.config.FormulaCloudConfig;
  */
 public class FormulaCloud {
 
-    private static OpenAccessSearcher searcher;
+//    private static OpenAccessSearcher searcher;
 
     private FormulaCloud() {};
 
     public static void init(FormulaCloudConfig config) {
-        searcher = new OpenAccessSearcher(config.getConfig());
-        searcher.init();
+//        searcher = new OpenAccessSearcher(config.getConfig());
+//        searcher.init();
     }
 
-    public static String search(String searchQuery) {
-        return searcher.search(searchQuery);
-    }
+//    public static String search(String searchQuery) {
+//        return searcher.search(searchQuery);
+//    }
 }

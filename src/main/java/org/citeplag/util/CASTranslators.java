@@ -29,10 +29,9 @@ public enum CASTranslators {
                 continue;
             }
 
-            ct.translator = new SaveTranslatorWrapper();
+            ct.translator = new SaveTranslatorWrapper(ct.cas);
             ct.translator.init(
                     config.getJarPath(),
-                    ct.cas,
                     config.getReferencesPath()
             );
         }

@@ -1,6 +1,5 @@
 package org.citeplag.config;
 
-import mir.formulacloud.searcher.SearcherConfig;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -48,14 +47,14 @@ public class FormulaCloudConfig {
         this.maxDF = maxDF;
     }
 
-    public SearcherConfig getConfig() {
-        SearcherConfig conf = new SearcherConfig();
-        conf.setDatabaseParentFolder(databasePath);
-        conf.setTfidfData(tfidfData);
-        conf.setFixedIndex(index);
-        conf.setElasticsearchMaxHits(esMaxHits);
-        conf.setMinDocumentFrequency(minDF);
-        conf.setMaxDocumentFrequency(maxDF);
-        return conf;
-    }
+//    public SearcherConfig getConfig() {
+//        SearcherConfig conf = new SearcherConfig();
+//        conf.setDatabaseParentFolder(databasePath);
+//        conf.setTfidfData(tfidfData);
+//        conf.setFixedIndex(index);
+//        conf.setElasticsearchMaxHits(esMaxHits);
+//        conf.setMinDocumentFrequency(minDF);
+//        conf.setMaxDocumentFrequency(maxDF);
+//        return conf;
+//    }
 }

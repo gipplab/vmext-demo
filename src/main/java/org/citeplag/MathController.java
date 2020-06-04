@@ -114,7 +114,7 @@ public class MathController {
             response = new LaTeXMLServiceResponse(laTeXMLConverter.parseToNativeResponse(latex));
         } else {
             logger.info("Call remote LaTeXML service from: " + request.getRemoteAddr());
-            response = laTeXMLConverter.parseAsService(latex, true);
+            response = laTeXMLConverter.parseAsService(latex);
         }
         time = System.currentTimeMillis() - time;
         response.setLog(response.getLog() + " Time in MS: " + time);
@@ -168,7 +168,7 @@ public class MathController {
             return cas.getTranslator().getTranslationResult();
         } catch (NullPointerException npe) {
             TranslationResponse response = new TranslationResponse();
-            response.setLog("Unknown CAS!");
+            response.setLog("res");
             return response;
         } catch (Exception e) {
             logger.warn("Error due translation for " + latex, e);
@@ -187,13 +187,14 @@ public class MathController {
     ) {
         logger.info("Start searching process for \"" + searchQuery + "\" from: " + request.getRemoteAddr());
 
-        try {
-            return FormulaCloud.search(searchQuery);
-        } catch (Exception e) {
-            logger.warn("Error due searching.", e);
-            String errorMsg = "[ERROR] " + e.toString();
-            return errorMsg;
-        }
+//        try {
+//            return FormulaCloud.search(searchQuery);
+//        } catch (Exception e) {
+//            logger.warn("Error due searching.", e);
+//            String errorMsg = "[ERROR] " + e.toString();
+//            return errorMsg;
+//        }
+        return null;
     }
 
     /**
