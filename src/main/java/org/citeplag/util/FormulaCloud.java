@@ -1,6 +1,6 @@
 package org.citeplag.util;
 
-import org.citeplag.config.FormulaCloudConfig;
+import org.citeplag.config.FormulaCloudServerConfig;
 
 /**
  * @author Andre Greiner-Petter
@@ -11,7 +11,7 @@ public class FormulaCloud {
 
     private FormulaCloud() {};
 
-    public static void init(FormulaCloudConfig config) {
+    public static void init(FormulaCloudServerConfig config) {
 //        searcher = new OpenAccessSearcher(config.getConfig());
 //        searcher.init();
     }
