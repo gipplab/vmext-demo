@@ -1,4 +1,4 @@
-package org.citeplag;
+package org.citeplag.controller;
 
 import com.formulasearchengine.mathosphere.basex.Client;
 import com.formulasearchengine.mathosphere.basex.Server;
@@ -9,7 +9,7 @@ import org.apache.log4j.Logger;
 import org.citeplag.config.BaseXConfig;
 import org.citeplag.domain.MathRequest;
 import org.citeplag.domain.MathUpdate;
-import org.citeplag.util.Response;
+import org.citeplag.beans.BaseXGenericResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -168,7 +168,7 @@ public class BaseXController {
 
     @PostMapping("/restartBaseXServer")
     @ApiOperation(value = "Restarts the BaseX server with another harvest file.")
-    public Response restart(
+    public BaseXGenericResponse restart(
             @RequestParam("Path") @ApiParam(
                     name = "Path",
                     value = "Path to harvest file (linux line separators)!",
@@ -176,7 +176,7 @@ public class BaseXController {
                     String harvestPath,
             HttpServletRequest request) {
         if (harvestPath == null || harvestPath.isEmpty()) {
-            return new Response(1, "Empty path! Didn't restart the server.");
+            return new BaseXGenericResponse(1, "Empty path! Didn't restart the server.");
         }
 
         String oldHarvest = baseXConfig.getHarvestPath();
@@ -185,21 +185,21 @@ public class BaseXController {
             Path path = Paths.get(harvestPath);
 
             if (!Files.exists(path)) {
-                return new Response(1, "Given file does not exist! Didn't restart server.");
+                return new BaseXGenericResponse(1, "Given file does not exist! Didn't restart server.");
             }
 
             baseXConfig.setHarvestPath(harvestPath);
 
             BASEX_SERVER.startup(path.toFile());
-            return new Response(0, "Restarted BaseX server with harvest file " + path.toString());
+            return new BaseXGenericResponse(0, "Restarted BaseX server with harvest file " + path.toString());
         } catch (InvalidPathException ipe) {
-            return new Response(1, "Cannot parse given string to a path, "
+            return new BaseXGenericResponse(1, "Cannot parse given string to a path, "
                     + "didn't restart server! Reason: " + ipe.getReason());
         } catch (IOException ioe) {
             // reset settings
             serverRunning = false;
             baseXConfig.setHarvestPath(oldHarvest);
-            return new Response(1, "Cannot restart the BaseX server. " + ioe.toString());
+            return new BaseXGenericResponse(1, "Cannot restart the BaseX server. " + ioe.toString());
         }
     }
 

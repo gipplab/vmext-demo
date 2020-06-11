@@ -1,12 +1,15 @@
 package org.citeplag.endpoints;
 
+import com.formulasearchengine.formulacloud.beans.InverseDocumentFrequencies;
+import com.formulasearchengine.formulacloud.beans.TermFrequencies;
 import com.formulasearchengine.formulacloud.data.Databases;
 import com.formulasearchengine.formulacloud.data.SearchConfig;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.citeplag.util.SearchResultResponse;
+import org.citeplag.beans.SearchResultResponse;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -16,7 +19,10 @@ import javax.servlet.http.HttpServletResponse;
  * @author Andre Greiner-Petter
  */
 public interface IMOISearchEndpoints {
-    @PostMapping("/search")
+    @PostMapping(
+            value = "/search",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     @ApiOperation(value = "Searches for MOIs by a given text.")
     @ApiResponses(
             value = {
@@ -29,6 +35,18 @@ public interface IMOISearchEndpoints {
             @RequestParam() String query,
             @ApiParam(value = "The database you want search", defaultValue = "ARQMath")
             @RequestParam(required = false) Databases database,
+            @ApiParam(value = "Specifies how to calculate the term frequency.",
+                    name = "termFrequencyCalculator", defaultValue = "BM25")
+            @RequestParam(required = false) TermFrequencies tfCalculator,
+            @ApiParam(value = "Specifies how to calculate the inverse document frequency.",
+                    name = "inverseDocumentFrequencyCalculator", defaultValue = "IDF")
+            @RequestParam(required = false) InverseDocumentFrequencies idfCalculator,
+            @ApiParam(value = "k1 is used if you calculate the BM25 or mBM25 term frequency score. Otherwise this value is ignored.",
+                    defaultValue = "1.2", example = "1.2")
+            @RequestParam(required = false) Double k1,
+            @ApiParam(value = "b is used if you calculate the BM25 or mBM25 term frequency score. Otherwise this value is ignored.",
+                    defaultValue = "0.95", example = "0.95")
+            @RequestParam(required = false) Double b,
             @ApiParam(value = "The minimum term frequency of the MOI", example = "1")
             @RequestParam(required = false, defaultValue = "1") Integer minTF,
             @ApiParam(value = "The minimum document frequency of the MOI", example = "1")
@@ -68,6 +86,10 @@ public interface IMOISearchEndpoints {
         if ( minNumberOfDocHitsPerMOI != null ) config.setMinNumberOfDocHitsPerMOI(minNumberOfDocHitsPerMOI);
         if ( maxNumberOfResults != null ) config.setMaxNumberOfResults(maxNumberOfResults);
         if ( enableMathML != null ) config.setEnableMathML(enableMathML);
+        if ( tfCalculator != null ) config.getTfidfOptions().setTfOption(tfCalculator);
+        if ( idfCalculator != null ) config.getTfidfOptions().setIdfOption(idfCalculator);
+        if ( k1 != null ) config.getTfidfOptions().setK1(k1);
+        if ( b != null ) config.getTfidfOptions().setB(b);
         return search(config);
     }
 

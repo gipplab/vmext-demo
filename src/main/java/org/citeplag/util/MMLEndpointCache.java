@@ -1,6 +1,7 @@
 package org.citeplag.util;
 
 import com.formulasearchengine.mathmltools.converters.mathoid.MathoidInfoResponse;
+import org.citeplag.beans.MathoidRequest;
 
 /**
  * @author Andre Greiner-Petter

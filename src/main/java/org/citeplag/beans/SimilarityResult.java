@@ -1,4 +1,4 @@
-package org.citeplag.util;
+package org.citeplag.beans;
 
 import com.formulasearchengine.mathmltools.similarity.result.Match;
 

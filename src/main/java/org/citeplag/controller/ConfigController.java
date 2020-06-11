@@ -1,4 +1,4 @@
-package org.citeplag;
+package org.citeplag.controller;
 
 import com.formulasearchengine.mathmltools.converters.config.LaTeXMLConfig;
 import io.swagger.annotations.ApiOperation;

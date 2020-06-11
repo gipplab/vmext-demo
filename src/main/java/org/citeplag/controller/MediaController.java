@@ -1,4 +1,4 @@
-package org.citeplag.config;
+package org.citeplag.controller;
 
 import com.formulasearchengine.mathmltools.converters.LaTeXMLConverter;
 import com.formulasearchengine.mathmltools.converters.MathoidConverter;
@@ -11,8 +11,10 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.citeplag.config.LaTeXMLRemoteConfig;
+import org.citeplag.config.MathoidConfig;
 import org.citeplag.util.MMLEndpointCache;
-import org.citeplag.util.MathoidRequest;
+import org.citeplag.beans.MathoidRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;

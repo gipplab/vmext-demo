@@ -1,4 +1,4 @@
-package org.citeplag.util;
+package org.citeplag.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

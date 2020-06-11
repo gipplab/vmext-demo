@@ -1,17 +1,16 @@
-package org.citeplag;
+package org.citeplag.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.formulasearchengine.mathmltools.converters.LaTeXMLConverter;
 import com.formulasearchengine.mathmltools.converters.MathoidConverter;
 import com.formulasearchengine.mathmltools.converters.cas.TranslationResponse;
 import com.formulasearchengine.mathmltools.converters.mathoid.EnrichedMathMLTransformer;
 import com.formulasearchengine.mathmltools.converters.services.LaTeXMLServiceResponse;
-import com.formulasearchengine.mathmltools.mml.elements.MathDoc;
 import com.formulasearchengine.mathmltools.similarity.MathPlag;
 import com.formulasearchengine.mathmltools.similarity.result.Match;
 import com.google.common.collect.Maps;
 import io.swagger.annotations.ApiOperation;
 import org.apache.log4j.Logger;
+import org.citeplag.beans.CASTranslators;
+import org.citeplag.beans.SimilarityResult;
 import org.citeplag.config.CASTranslatorConfig;
 import org.citeplag.config.LaTeXMLRemoteConfig;
 import org.citeplag.config.MathoidConfig;
@@ -20,16 +19,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.ResourceAccessException;
-import org.xml.sax.SAXException;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -85,61 +78,9 @@ public class MathController {
             @RequestParam(required = false) String rawLatex,
             @RequestParam String latex,
             HttpServletRequest request) throws Exception {
-
-        // if request configuration is given, use it.
-        LaTeXMLRemoteConfig usedConfig = config != null
-                ? new ObjectMapper().readValue(config, LaTeXMLRemoteConfig.class)
-                : laTeXMLRemoteConfig;
-
-        LaTeXMLConverter laTeXMLConverter = new LaTeXMLConverter(usedConfig);
-
-        if (usedConfig.isContent()) {
-            laTeXMLConverter.semanticMode();
-            Path p = Paths.get(usedConfig.getContentPath());
-            laTeXMLConverter.redirectLatex(p);
-        } else {
-            laTeXMLConverter.nonSemanticMode();
-        }
-
-        LaTeXMLServiceResponse response;
-        long time = System.currentTimeMillis();
-        if (!usedConfig.isRemote()) {
-            logger.info("Call LaTeXML locally requested from: " + request.getRemoteAddr());
-            response = new LaTeXMLServiceResponse(laTeXMLConverter.parseToNativeResponse(latex));
-        } else {
-            logger.info("Call remote LaTeXML service from: " + request.getRemoteAddr());
-            response = laTeXMLConverter.parseAsService(latex);
-        }
-        time = System.currentTimeMillis() - time;
-        response.setLog(response.getLog() + " Time in MS: " + time);
-
-        return postProcessingOnMML(rawLatex, response);
-    }
-
-    private LaTeXMLServiceResponse postProcessingOnMML(String originalInputTex, LaTeXMLServiceResponse response) {
-        try {
-            final MathDoc math = new MathDoc(MathDoc.tryFixHeader(response.getResult()));
-            math.fixGoldCd();
-            if (originalInputTex != null) {
-                math.changeTeXAnnotation(originalInputTex);
-            }
-            String newMML = math.toString();
-            response.setResult(newMML);
-        } catch (NullPointerException | ParserConfigurationException | IOException | SAXException e) {
-            // write stack trace to string
-            StringWriter sw = new StringWriter();
-            PrintWriter printWriter = new PrintWriter(sw);
-            e.printStackTrace(printWriter);
-            String stackTrace = sw.toString();
-            String oldLog = response.getLog();
-            response.setLog(oldLog + System.lineSeparator()
-                    + "Cannot post process MML response from Latexml. Reason: "
-                    + e.getMessage()
-                    + System.lineSeparator()
-                    + stackTrace
-            );
-        }
-        return response;
+        return LaTeXMLInterface.convertLaTeX(
+                laTeXMLRemoteConfig, config, rawLatex, latex, request
+        );
     }
 
     @InitBinder("cas")

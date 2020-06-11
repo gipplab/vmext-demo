@@ -1,11 +1,11 @@
-package org.citeplag.util;
+package org.citeplag.beans;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * @author Andre Greiner-Petter
  */
-public class Response {
+public class BaseXGenericResponse {
 
     @JsonProperty("status")
     private Integer code;
@@ -13,10 +13,10 @@ public class Response {
     @JsonProperty("message")
     private String message;
 
-    public Response() {
+    public BaseXGenericResponse() {
     }
 
-    public Response(int code, String message) {
+    public BaseXGenericResponse(int code, String message) {
         this.code = code;
         this.message = message;
     }
