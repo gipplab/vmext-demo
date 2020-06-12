@@ -95,6 +95,7 @@ public class ApplicationStart {
         return or(
                 regex("/math.*"),
                 regex("/moi.*"),
+                regex("/tests.*"),
                 regex("/config.*"),
                 regex("/basex.*"),
                 regex("/v1/media.*")

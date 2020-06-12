@@ -24,6 +24,9 @@ import java.nio.file.Paths;
 public class LaTeXMLInterface {
     private static final Logger LOG = LogManager.getLogger(LaTeXMLInterface.class.getName());
 
+    private LaTeXMLInterface() {
+    }
+
     public static LaTeXMLServiceResponse convertLaTeX(
             LaTeXMLRemoteConfig defaultConfig,
             String config,

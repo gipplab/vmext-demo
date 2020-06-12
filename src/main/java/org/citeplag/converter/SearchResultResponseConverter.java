@@ -24,17 +24,17 @@ import java.util.LinkedList;
 public class SearchResultResponseConverter extends AbstractHttpMessageConverter<SearchResultResponse> {
     private static final Logger LOG = LogManager.getLogger(SearchResultResponseConverter.class.getName());
 
-    private final ObjectMapper MAPPER;
+    private final ObjectMapper mapper;
 
-    public SearchResultResponseConverter(){
+    public SearchResultResponseConverter() {
         super();
         LinkedList<MediaType> supportedMediaTypes = new LinkedList<>();
         supportedMediaTypes.add(MediaType.TEXT_PLAIN);
         supportedMediaTypes.add(MediaType.APPLICATION_JSON);
         super.setSupportedMediaTypes(supportedMediaTypes);
         super.setDefaultCharset(StandardCharsets.UTF_8);
-        this.MAPPER = new ObjectMapper();
-        this.MAPPER.enable(SerializationFeature.INDENT_OUTPUT);
+        this.mapper = new ObjectMapper();
+        this.mapper.enable(SerializationFeature.INDENT_OUTPUT);
     }
 
     @Override
@@ -43,19 +43,25 @@ public class SearchResultResponseConverter extends AbstractHttpMessageConverter<
     }
 
     @Override
-    protected @NotNull SearchResultResponse readInternal(@NotNull Class<? extends SearchResultResponse> clazz, HttpInputMessage inputMessage) throws IOException, HttpMessageNotReadableException {
+    protected boolean canRead(MediaType mediaType) {
+        return MediaType.APPLICATION_JSON.includes(mediaType);
+    }
+
+    @Override
+    protected @NotNull
+    SearchResultResponse readInternal(@NotNull Class<? extends SearchResultResponse> clazz, HttpInputMessage inputMessage) throws IOException, HttpMessageNotReadableException {
         String arg = IOUtils.toString(inputMessage.getBody(), StandardCharsets.UTF_8.toString());
         LOG.warn("Read Internal, but if is the argument?: " + arg);
-        return MAPPER.readValue(inputMessage.getBody(), clazz);
+        return mapper.readValue(inputMessage.getBody(), clazz);
     }
 
     @Override
     protected void writeInternal(@NotNull SearchResultResponse resultResponse, HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
         MediaType requestedContentType = outputMessage.getHeaders().getContentType();
-        if ( MediaType.TEXT_PLAIN.includes(requestedContentType) )
+        if (MediaType.TEXT_PLAIN.includes(requestedContentType)) {
             outputMessage.getBody().write(resultResponse.toString().getBytes());
-        else if ( MediaType.APPLICATION_JSON.includes(requestedContentType) ){
-            byte[] bytes = MAPPER.writeValueAsString(resultResponse).getBytes();
+        } else if (MediaType.APPLICATION_JSON.includes(requestedContentType)) {
+            byte[] bytes = mapper.writeValueAsString(resultResponse).getBytes();
             outputMessage.getBody().write(bytes);
         } else {
             LOG.info("Unsupported media requested for House. Switch to default (JSON)");

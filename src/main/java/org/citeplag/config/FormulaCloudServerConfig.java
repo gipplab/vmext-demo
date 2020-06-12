@@ -10,5 +10,4 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "formulacloud")
 public class FormulaCloudServerConfig extends ElasticsearchConfig {
-
 }
