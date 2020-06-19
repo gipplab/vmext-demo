@@ -135,18 +135,8 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring.boot.version}</version>
                 <configuration>
-                    <executable>true</executable>
+                    <finalName>mathpipeline</finalName>
                 </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>repackage</goal>
-                        </goals>
-                        <configuration>
-                            <finalName>mathpipeline</finalName>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
             <!-- code coverage -->
             <plugin>

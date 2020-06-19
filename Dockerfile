@@ -1,4 +1,6 @@
-FROM java:8
+FROM openjdk:11
 EXPOSE 8080
-ADD /target/mathpipeline.jar mathpipeline.jar
+COPY /target/mathpipeline.jar mathpipeline.jar
+COPY application.yaml application.yaml
+COPY lacast.config.yaml lacast.config.yaml
 ENTRYPOINT ["java","-jar","mathpipeline.jar"]

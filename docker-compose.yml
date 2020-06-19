@@ -6,7 +6,4 @@ services:
     ports:
       - 8080:8080
     volumes:
-      - ./application.yaml:/application.yaml:ro
-      - /home/andreg-p/Projects/latex-grammar/bin/latex-to-cas-translator.jar:/bin/latex-to-cas-translator.jar:ro
-      - /home/andreg-p/Projects/latex-grammar/libs/ReferenceData:/libs/ReferenceData:ro
-      - ./config:/config:ro
+      - ./LaCASt:/LaCASt:ro

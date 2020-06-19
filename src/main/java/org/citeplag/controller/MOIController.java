@@ -50,7 +50,6 @@ public class MOIController {
 
     @Autowired
     public void setServerConfig(FormulaCloudServerConfig serverConfig) {
-        LOG.info("Suddenly the setter is called, interesting!");
         this.searcher.changeConnection(serverConfig);
     }
 

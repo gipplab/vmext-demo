@@ -24,17 +24,12 @@ mathoid:
 
 # change this to your local path of the translator program
 translator:
-  jarPath: "/home/andre/Projects/LaCASt/bin/latex-to-cas-translator.jar"
-  referencesPath: "/home/andre/Projects/LaCASt/libs/ReferenceData"
+  jarPath: "/LaCASt/bin/latex-to-cas-translator.jar"
 
 basexserver:
   harvestPath: "sampleHarvest.xml"
 
 # -db /opt/zbmath/empty-dump/ -tfidf /opt/zbmath/tfidf/ -index zbmath -esMaxHits 200 -minDF 25 -maxDF 50000
 formulacloud:
-  databasePath: "/opt/zbmath/empty-dump/"
-  tfidfData: "/opt/zbmath/tfidf/"
-  index: "zbmath"
-  esMaxHits: 200
-  minDF: 25
-  maxDF: 50000
+  esHost: "localhost"
+  esPort: 9200

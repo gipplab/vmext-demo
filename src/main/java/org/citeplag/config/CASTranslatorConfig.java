@@ -1,5 +1,6 @@
 package org.citeplag.config;
 
+import com.formulasearchengine.mathmltools.converters.cas.TranslatorConfig;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -8,5 +9,5 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @ConfigurationProperties(prefix = "translator")
-public class CASTranslatorConfig extends com.formulasearchengine.mathmlconverters.cas.TranslatorConfig {
+public class CASTranslatorConfig extends TranslatorConfig {
 }
