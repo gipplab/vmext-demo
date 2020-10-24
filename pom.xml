@@ -56,12 +56,12 @@
         <dependency>
             <groupId>com.formulasearchengine.mathmltools</groupId>
             <artifactId>mathml-similarity</artifactId>
-            <version>2.0.2</version>
+            <version>mathmltools-2.0.2</version>
         </dependency>
         <dependency>
             <groupId>com.formulasearchengine.mathmltools</groupId>
             <artifactId>mathml-converters</artifactId>
-            <version>2.0.2</version>
+            <version>mathmltools-2.0.2</version>
         </dependency>
 
         <dependency>
