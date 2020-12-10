@@ -3,19 +3,29 @@ package org.citeplag.controller;
 import com.formulasearchengine.mathmltools.converters.MathoidConverter;
 import com.formulasearchengine.mathmltools.converters.cas.TranslationResponse;
 import com.formulasearchengine.mathmltools.converters.mathoid.EnrichedMathMLTransformer;
+import com.formulasearchengine.mathmltools.converters.mathoid.MathoidEndpoints;
 import com.formulasearchengine.mathmltools.converters.services.LaTeXMLServiceResponse;
 import com.formulasearchengine.mathmltools.similarity.MathPlag;
 import com.formulasearchengine.mathmltools.similarity.result.Match;
 import com.google.common.collect.Maps;
+import gov.nist.drmf.interpreter.generic.GenericLatexSemanticEnhancer;
+import gov.nist.drmf.interpreter.generic.mlp.struct.MOIPresentations;
+import gov.nist.drmf.interpreter.generic.pojo.SemanticEnhancedDocument;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import mlp.ParseException;
 import org.apache.log4j.Logger;
 import org.citeplag.beans.CASTranslators;
 import org.citeplag.beans.SimilarityResult;
 import org.citeplag.config.CASTranslatorConfig;
 import org.citeplag.config.LaTeXMLRemoteConfig;
 import org.citeplag.config.MathoidConfig;
-import org.citeplag.util.*;
+import org.citeplag.util.CASTranslatorsBinder;
+import org.citeplag.util.Example;
+import org.citeplag.util.ExampleLoader;
+import org.citeplag.util.LaTeXMLInterface;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.ResourceAccessException;
@@ -187,5 +197,38 @@ public class MathController {
     public Example getExample() throws IOException {
         // this could easily be extended for more examples
         return new ExampleLoader().load("euler");
+    }
+
+    @PostMapping("/analyzeDocument")
+    @ApiOperation(
+            value = "Analyzes the math in the given wikitext content"
+    )
+    public List<SemanticEnhancedDocument> getSemanticEnhancedDocuments(
+            @ApiParam(value = "The text search query", required = true)
+            @RequestParam() String content) {
+        GenericLatexSemanticEnhancer semanticEnhancer = new GenericLatexSemanticEnhancer();
+        return semanticEnhancer.getSemanticEnhancedDocumentsFromWikitext(content);
+    }
+
+    @PostMapping("/analyzeFormula")
+    @ApiOperation(
+            value = "Analyzes the math in the given wikitext content"
+    )
+    public HttpEntity getSemanticEnhancedMath(
+            @ApiParam(value = "The text search query", required = true)
+            @RequestParam() String content,
+            @ApiParam(value = "The formula", required = true)
+            @RequestParam()String latex
+    ) {
+        GenericLatexSemanticEnhancer semanticEnhancer = new GenericLatexSemanticEnhancer();
+        try {
+            MOIPresentations result = semanticEnhancer.enhanceGenericLaTeX(content, latex, null);
+            HttpHeaders header = new HttpHeaders();
+            header.setContentType(MediaType.APPLICATION_JSON);
+            return new HttpEntity<>(result, header);
+        } catch (ParseException e) {
+            logger.error("Unable to annotate generic latex: " + latex, e);
+            return new ResponseEntity<>("Unknown Format", HttpStatus.BAD_REQUEST);
+        }
     }
 }

@@ -6,3 +6,5 @@ services:
       - 8080:8080
     volumes:
       - ./LaCASt:/LaCASt:ro
+      - ./test/vmext-application.yaml:/application.yaml:ro
+      - ./test/lacast-config.yaml:/lacast.config.yaml:ro

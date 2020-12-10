@@ -1,4 +1,4 @@
 [submodule "LaCASt"]
 	path = LaCASt
 	url = git@github.com:ag-gipp/LaCASt.git
-	branch = improve-translator
+	branch = wikipedia
