@@ -3,14 +3,15 @@ package org.citeplag.controller;
 import com.formulasearchengine.mathmltools.converters.MathoidConverter;
 import com.formulasearchengine.mathmltools.converters.cas.TranslationResponse;
 import com.formulasearchengine.mathmltools.converters.mathoid.EnrichedMathMLTransformer;
-import com.formulasearchengine.mathmltools.converters.mathoid.MathoidEndpoints;
 import com.formulasearchengine.mathmltools.converters.services.LaTeXMLServiceResponse;
 import com.formulasearchengine.mathmltools.similarity.MathPlag;
 import com.formulasearchengine.mathmltools.similarity.result.Match;
 import com.google.common.collect.Maps;
+import gov.nist.drmf.interpreter.cas.translation.SemanticLatexTranslator;
+import gov.nist.drmf.interpreter.common.TranslationInformation;
+import gov.nist.drmf.interpreter.generic.mlp.pojo.MOIPresentations;
 import gov.nist.drmf.interpreter.generic.GenericLatexSemanticEnhancer;
-import gov.nist.drmf.interpreter.generic.mlp.struct.MOIPresentations;
-import gov.nist.drmf.interpreter.generic.pojo.SemanticEnhancedDocument;
+import gov.nist.drmf.interpreter.generic.mlp.pojo.SemanticEnhancedDocument;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import mlp.ParseException;
@@ -108,9 +109,13 @@ public class MathController {
     ) {
         logger.info("Start translation process to " + cas + " from: " + request.getRemoteAddr());
 
+        SemanticLatexTranslator translator = cas.getTranslator();
         try {
-            cas.getTranslator().translate(latex, label);
-            return cas.getTranslator().getTranslationResult();
+            TranslationInformation translationInf = translator.translateToObject(latex, label);
+            TranslationResponse tr = new TranslationResponse();
+            tr.setResult(translationInf.getTranslatedExpression());
+            tr.setLog(translationInf.getTranslationInformation().toString());
+            return tr;
         } catch (NullPointerException npe) {
             TranslationResponse response = new TranslationResponse();
             response.setLog("res");

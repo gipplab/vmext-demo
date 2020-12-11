@@ -2,16 +2,13 @@ lacast.libs.path: ./LaCASt/libs
 lacast.config.path: ./LaCASt/config
 
 lacast.cas:
-  - cas: "Maple"
-    paths:
-      - "/opt/maple2019"
-      - "/opt/maple2019/bin.X86_64_LINUX"
-  - cas: "Mathematica"
-    paths: "/opt/Wolfram"
-  - cas: "SymPy"
+  Maple:
+  Mathematica:
+    install.path: "/opt/Wolfram"
+  SymPy:
 
 lacast.generic:
-  elasticsearch.host: "localhost"
+  elasticsearch.host: "172.17.0.1"
   elasticsearch.port: 9200
   elasticsearch.macros.index: "dlmf-macros"
-  mathoid.url: "http://localhost:10044/texvcinfo"
+  mathoid.url: "http://172.17.0.1:10044/texvcinfo"

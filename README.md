@@ -126,3 +126,39 @@ in the execution / installation folder. The content should be (_this is the defa
       active: true
       url: http://localhost:10044/mml
       
+# Deploy for DKE
+
+The `vmext-demo` docker is now a private docker container. It is no 
+longer maintained over DockerHub because it contains LaCASt (currently private).
+
+Updating vmext-demo on DKE has to be done manually now. 
+
+1. checkout the repo and build it so that you have a running `target/mathpipeline.jar`
+2. Check if its working locally. You need to update `lacast.config.yaml` according to your system needs.
+You may need elasticsearch and mathoid running locally also or you create port-forwarding and connect to DKE via ssh.
+3. Run locally `java -jar target/mathpipeline.jar` and check on `localhost:8080/swagger-ui.html`
+if everything works as expected.
+4. Bring the changed files to DKE via `scp target/mathpipeline user@dke01:~/mathpipeline.jar`
+5. Login to dke server via ssh
+6. Find the running docker container via `docker ps`. The name is `vmext-demo` and tag `lacast`.
+7. Copy the changed files to the appropriate locations inside the docker container via
+`docker cp mathpipeline.jar vmext-demo:/mathpipeline.jar`
+8. **IMPORTANT:** update the image of the container after you changed something in the container via 
+`docker commit vmext-demo vmext-demo:lacast` (first the docker name, than the image name)
+9. Restart the container so that the changes gets applied via
+`/usr/bin/docker-compose restart vmext-demo`. 
+
+That's it.
+
+If you need to start from scratch you need a free developer license for mathematica and:
+1. Again, build everything locally and test if it works.
+2. Build the container `docker build . -t vmext-demo:lacast` (thats the image name). This may take some
+time because installing mathematicas license requires some basic ubuntu libraries.
+3. Run the docker container for the first time `docker run --name vmext-demo -p 8080:8080 vmext-demo:lacast`
+4. Now connect to the running container `docker exec -it vmext-demo /bin/bash`
+5. Run `/usr/bin/wolframscript` and activate your license (e-mail credentials you took to get your free developer license. 
+The credentials are the same you need on the website. The wolfram ID is you e-mail.)
+6. exit with `exit`
+7. **Very important:** update your container NOW! otherwise on the next restart its gone...
+`docker commit vmext-demo vmext-demo:lacast`.
+8. That's it. For deployment and updates, you need to follow the guide above.

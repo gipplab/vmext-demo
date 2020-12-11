@@ -20,7 +20,7 @@ latexml:
 # Mathoid - alternative Latex to MathML converter
 mathoid:
   active: true
-  url: http://localhost:10044/mml
+  url: http://172.17.0.1:10044/mml
 
 # change this to your local path of the translator program
 translator:
@@ -31,5 +31,5 @@ basexserver:
 
 # -db /opt/zbmath/empty-dump/ -tfidf /opt/zbmath/tfidf/ -index zbmath -esMaxHits 200 -minDF 25 -maxDF 50000
 formulacloud:
-  elasticsearchHost: "localhost"
+  elasticsearchHost: "172.17.0.1"
   elasticsearchPort: 9200
