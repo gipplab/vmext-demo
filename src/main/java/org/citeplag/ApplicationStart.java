@@ -2,8 +2,12 @@ package org.citeplag;
 
 import com.fasterxml.classmate.TypeResolver;
 import com.google.common.base.Predicate;
+import gov.nist.drmf.interpreter.generic.mlp.pojo.MOIPresentations;
+import gov.nist.drmf.interpreter.generic.mlp.pojo.SemanticEnhancedDocument;
 import org.citeplag.beans.SearchResultResponse;
+import org.citeplag.converter.MoiPresentationsConverter;
 import org.citeplag.converter.SearchResultResponseConverter;
+import org.citeplag.converter.SemanticEnhancedDocumentConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -58,6 +62,16 @@ public class ApplicationStart {
     @Bean("SearchResultResponseConverter")
     public HttpMessageConverter<SearchResultResponse> stringHttpMessageConverter() {
         return new SearchResultResponseConverter();
+    }
+
+    @Bean("SemanticEnhancedDocumentConverter")
+    public HttpMessageConverter<SemanticEnhancedDocument> stringHttpSedMessageConverter() {
+        return new SemanticEnhancedDocumentConverter();
+    }
+
+    @Bean("MoiPresentationsConverter")
+    public HttpMessageConverter<MOIPresentations> stringHttpMoiMessageConverter() {
+        return new MoiPresentationsConverter();
     }
 
     @Bean

@@ -45,8 +45,8 @@
             <AppenderRef ref="DebugConsole"/>
 <!--            <AppenderRef ref="TraceConsole"/>-->
 <!--            <AppenderRef ref="ErrorConsole"/>-->
-            <AppenderRef ref="LogFile"/>
-            <AppenderRef ref="ErrorFile"/>
+<!--            <AppenderRef ref="LogFile"/>-->
+<!--            <AppenderRef ref="ErrorFile"/>-->
         </Root>
     </Loggers>
 </Configuration>

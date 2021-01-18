@@ -168,6 +168,8 @@
                 <version>${spring.boot.version}</version>
                 <configuration>
                     <finalName>mathpipeline</finalName>
+                    <layout>JAR</layout>
+                    <mainClass>org.citeplag.ApplicationStart</mainClass>
                 </configuration>
             </plugin>
             <!-- code coverage -->
