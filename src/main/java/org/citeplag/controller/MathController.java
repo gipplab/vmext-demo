@@ -11,6 +11,7 @@ import gov.nist.drmf.interpreter.cas.translation.SemanticLatexTranslator;
 import gov.nist.drmf.interpreter.common.TranslationInformation;
 import gov.nist.drmf.interpreter.common.exceptions.MinimumRequirementNotFulfilledException;
 import gov.nist.drmf.interpreter.common.pojo.CASResult;
+import gov.nist.drmf.interpreter.common.pojo.SemanticEnhancedAnnotationStatus;
 import gov.nist.drmf.interpreter.generic.GenericLatexSemanticEnhancer;
 import gov.nist.drmf.interpreter.generic.mlp.pojo.MOIPresentations;
 import gov.nist.drmf.interpreter.generic.mlp.pojo.SemanticEnhancedDocument;
@@ -18,6 +19,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import mlp.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.citeplag.beans.CASTranslators;
@@ -226,7 +228,7 @@ public class MathController {
     )
     @ApiResponses(
             value = {
-                    @ApiResponse(code = 200, message = "Successfully searched", response = SemanticEnhancedDocument.class),
+                    @ApiResponse(code = 200, message = "Successfully analyzed", response = SemanticEnhancedDocument.class),
                     @ApiResponse(code = 500, message = "Unable generate semantic enhanced document")
             }
     )
@@ -243,7 +245,7 @@ public class MathController {
     )
     @ApiResponses(
             value = {
-                    @ApiResponse(code = 200, message = "Successfully searched", response = SemanticEnhancedDocument.class),
+                    @ApiResponse(code = 200, message = "Successfully translated entire document", response = SemanticEnhancedDocument.class),
                     @ApiResponse(code = 500, message = "Unable to append translations to document")
             }
     )
@@ -260,6 +262,47 @@ public class MathController {
             return new ResponseEntity<>("The given document did not fulfill the minimum requirements: " + e.getMessage(), HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             LOG.error("Unable to append translations to document", e);
+            return new ResponseEntity<>("An unknown error occurred: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("/generateTranslatedComputedMoi")
+    @ApiOperation(
+            value = "Generates a translated and computed MOI for the given latex string and the given context (as dependency graph)"
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(code = 200, message = "Successfully translated and computed formula", response = SemanticEnhancedDocument.class),
+                    @ApiResponse(code = 500, message = "Unable to perform translation and computation")
+            }
+    )
+    public HttpEntity<?> getTranslatedAndComputedMoi(
+            @ApiParam(value = "The context as a dependency graph", required = true)
+            @RequestBody SemanticEnhancedDocumentExtension documentDependencyGraph,
+            @ApiParam(value = "The LaTeX string of the formula to analyze (might or might not be in the graph)", required = true)
+            @RequestParam() String latex
+    ) {
+        try {
+            MOIPresentations moi = semanticEnhancer.generateMOIPresentationFromDocument(documentDependencyGraph, latex);
+
+            if (!SemanticEnhancedAnnotationStatus.TRANSLATED.hasPassed(moi.getRank())) {
+                LOG.warn("Unable to perform translations for the given LaTeX string: " + latex);
+                moi.setScore(-1.0);
+            } else {
+                moi = semanticEnhancer.computeMOI(moi);
+            }
+
+            HttpHeaders header = new HttpHeaders();
+            header.setContentType(MediaType.APPLICATION_JSON);
+            return new HttpEntity<>(moi, header);
+        } catch (MinimumRequirementNotFulfilledException mrnfe) {
+            LOG.error("The document did not provide sufficient information: " + mrnfe.getMessage());
+            return new ResponseEntity<>("The given context (dependency graph) did not contain sufficient information: " + mrnfe.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (ParseException pe) {
+            LOG.error("Unable to parse the given latex string. Reason: " + pe.getMessage());
+            return new ResponseEntity<>("Unable to parse the given LaTeX formula because: " + pe.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            LOG.error("An unknown error occurred during computation/translation: " + e.getMessage(), e);
             return new ResponseEntity<>("An unknown error occurred: " + e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
