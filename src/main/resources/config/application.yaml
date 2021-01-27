@@ -1,6 +1,7 @@
 server:
 #  servlet-path: /pipe   # custom servlet-path
   port: 8080            # default server port, if not set otherwise
+  max-http-header-size: 10000000
 
 # Math AST Renderer - Main URL
 mast.url: https://vmext.wmflabs.org/

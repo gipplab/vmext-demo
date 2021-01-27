@@ -22,8 +22,8 @@ public class SpringMapleSubprocessInfo implements RmiSubprocessInfo {
     @Override
     public List<String> getJvmArgs() {
         List<String> list = new LinkedList<>();
-        list.add("-Xms2g");
-        list.add("-Xmx10g");
+        list.add("-XX:HeapDumpPath=/dev/null");
+        list.add("-Xms10g");
         list.add("-Xss200M");
         return list;
     }
