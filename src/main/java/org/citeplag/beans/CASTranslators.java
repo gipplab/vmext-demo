@@ -11,7 +11,8 @@ import java.util.Arrays;
  */
 public enum CASTranslators {
     MapleTranslator("Maple", null),
-    MathematicaTranslator("Mathematica", null);
+    MathematicaTranslator("Mathematica", null),
+    SympyTranslator("SymPy", null);
 
     private String cas;
 
