@@ -18,6 +18,8 @@
         <spring.boot.version>2.3.0.RELEASE</spring.boot.version>
         <java.version>1.8</java.version>
         <swagger.version>2.9.2</swagger.version>
+        <!-- Convince spring boot to use okhttp3 v4 which is necessary to communicate with Wikidata -->
+        <okhttp3.version>4.9.0</okhttp3.version>
     </properties>
 
 
@@ -32,6 +34,10 @@
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
+        </repository>
+        <repository>
+            <id>basex</id>
+            <url>https://files.basex.org/maven</url>
         </repository>
     </repositories>
 
@@ -156,6 +162,24 @@
             <groupId>com.formulasearchengine.formulacloud</groupId>
             <artifactId>formula-cloud-server</artifactId>
             <version>1.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- Wikidata Toolkit -->
+        <dependency>
+            <groupId>org.wikidata.wdtk</groupId>
+            <artifactId>wdtk-dumpfiles</artifactId>
+            <version>0.12.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wikidata.wdtk</groupId>
+            <artifactId>wdtk-wikibaseapi</artifactId>
+            <version>0.12.1</version>
+        </dependency>
+        <!-- Wikipedia (Wiki Bot Framework) -->
+        <dependency>
+            <groupId>net.sourceforge</groupId>
+            <artifactId>jwbf</artifactId>
+            <version>4.0.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
 

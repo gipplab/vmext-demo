@@ -13,6 +13,7 @@ import gov.nist.drmf.interpreter.common.exceptions.MinimumRequirementNotFulfille
 import gov.nist.drmf.interpreter.common.pojo.CASResult;
 import gov.nist.drmf.interpreter.common.pojo.SemanticEnhancedAnnotationStatus;
 import gov.nist.drmf.interpreter.generic.GenericLatexSemanticEnhancer;
+import gov.nist.drmf.interpreter.generic.SemanticEnhancedDocumentBuilder;
 import gov.nist.drmf.interpreter.generic.mlp.pojo.MOIPresentations;
 import gov.nist.drmf.interpreter.generic.mlp.pojo.SemanticEnhancedDocument;
 import io.swagger.annotations.ApiOperation;
@@ -39,6 +40,7 @@ import org.springframework.http.*;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.ResourceAccessException;
+import org.wikidata.wdtk.wikibaseapi.apierrors.MediaWikiApiErrorException;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
@@ -237,6 +239,33 @@ public class MathController {
             @RequestParam() String content
     ) {
         return semanticEnhancer.generateAnnotatedDocument(content);
+    }
+
+    // test case Jacobi polynomial: Q371631
+    @PostMapping(
+            value = "/generateAnnotatedDependencyGraphFromWikidataItem",
+            produces = {MediaType.APPLICATION_JSON_VALUE}
+    )
+    @ApiOperation(
+            value = "Generates an annotated dependency graph"
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(code = 200, message = "Successfully loaded and analyzed", response = SemanticEnhancedDocument.class),
+                    @ApiResponse(code = 500, message = "Unable generate semantic enhanced document by given Wikidata ID")
+            }
+    )
+    public SemanticEnhancedDocument wikidataLoader(
+            @RequestParam() String qid
+    ) throws MediaWikiApiErrorException, IOException {
+        /*TODO
+            3) Extension idea:
+                3.1) find MOI with at least 0.8 first place matching the title (or description?) of Wikidata item
+                3.2) if item does not contain math yet, find math in article
+                3.3) addition, analyze elements
+         */
+        SemanticEnhancedDocumentBuilder builder = SemanticEnhancedDocumentBuilder.getDefaultBuilder();
+        return builder.getDocumentFromWikidataItem(qid);
     }
 
     @PostMapping("/appendTranslationsToDocument")
