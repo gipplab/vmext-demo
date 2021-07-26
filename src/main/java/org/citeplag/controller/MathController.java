@@ -10,12 +10,16 @@ import com.google.common.collect.Maps;
 import gov.nist.drmf.interpreter.cas.translation.SemanticLatexTranslator;
 import gov.nist.drmf.interpreter.common.TranslationInformation;
 import gov.nist.drmf.interpreter.common.exceptions.MinimumRequirementNotFulfilledException;
+import gov.nist.drmf.interpreter.common.interfaces.TranslationFeature;
 import gov.nist.drmf.interpreter.common.pojo.CASResult;
 import gov.nist.drmf.interpreter.common.pojo.SemanticEnhancedAnnotationStatus;
 import gov.nist.drmf.interpreter.generic.GenericLatexSemanticEnhancer;
 import gov.nist.drmf.interpreter.generic.SemanticEnhancedDocumentBuilder;
+import gov.nist.drmf.interpreter.generic.mediawiki.DefiningFormula;
 import gov.nist.drmf.interpreter.generic.mlp.pojo.MOIPresentations;
 import gov.nist.drmf.interpreter.generic.mlp.pojo.SemanticEnhancedDocument;
+import gov.nist.drmf.interpreter.pom.extensions.PrintablePomTaggedExpression;
+import gov.nist.drmf.interpreter.pom.generic.GenericReplacementTool;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
@@ -197,13 +201,20 @@ public class MathController {
             @RequestParam() CASTranslators cas,
             @RequestParam() String latex,
             @RequestParam(required = false) String label,
+            @RequestParam(required = false) Boolean genericExperimentalFeatures,
             HttpServletRequest request
     ) {
+        boolean experimental = genericExperimentalFeatures != null && genericExperimentalFeatures;
+
         LOG.info("Start translation process to " + cas + " from: " + request.getRemoteAddr());
+        if (experimental) {
+            LOG.debug("Experimental translation process activated.");
+        }
 
         SemanticLatexTranslator translator = cas.getTranslator();
         try {
-            TranslationInformation translationInf = translator.translateToObject(latex, label);
+            TranslationFeature<PrintablePomTaggedExpression> feature = experimental ? new GenericReplacementTool() : null;
+            TranslationInformation translationInf = translator.translateToObject(latex, label, feature);
             TranslationResponse tr = new TranslationResponse();
             tr.setResult(translationInf.getTranslatedExpression());
             tr.setLog(translationInf.getTranslationInformation().toString());
@@ -258,14 +269,28 @@ public class MathController {
     public SemanticEnhancedDocument wikidataLoader(
             @RequestParam() String qid
     ) throws MediaWikiApiErrorException, IOException {
-        /*TODO
-            3) Extension idea:
-                3.1) find MOI with at least 0.8 first place matching the title (or description?) of Wikidata item
-                3.2) if item does not contain math yet, find math in article
-                3.3) addition, analyze elements
-         */
         SemanticEnhancedDocumentBuilder builder = SemanticEnhancedDocumentBuilder.getDefaultBuilder();
         return builder.getDocumentFromWikidataItem(qid);
+    }
+
+    @PostMapping(
+            value = "/suggestWikidataItemDefiningFormula",
+            produces = {MediaType.APPLICATION_JSON_VALUE}
+    )
+    @ApiOperation(
+            value = "Suggests defining formula and its elements for a given Wikidata QID"
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(code = 200, message = "Scored Suggestions", response = DefiningFormula[].class),
+                    @ApiResponse(code = 500, message = "Unable generate suggestions for given Wikidata QID")
+            }
+    )
+    public List<DefiningFormula> wikidataSuggestor(
+            @RequestParam() String qid
+    ) throws MediaWikiApiErrorException, IOException {
+        SemanticEnhancedDocumentBuilder builder = SemanticEnhancedDocumentBuilder.getDefaultBuilder();
+        return builder.enhanceWikidataItem(qid);
     }
 
     @PostMapping("/appendTranslationsToDocument")
