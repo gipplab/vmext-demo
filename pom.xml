@@ -51,6 +51,10 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+        <dependency><!-- Required to use PropertiesLauncher (loading Maple at runtime) -->
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-loader</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>gov.nist.drmf.interpreter</groupId>
