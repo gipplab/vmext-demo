@@ -1,0 +1,19 @@
+lacast.libs.path: ./LaCASt/libs
+lacast.config.path: ./LaCASt/config
+
+lacast.cas:
+  Maple:
+    install.path: "/opt/maple2020"
+  Mathematica:
+    install.path: "/opt/Wolfram"
+  SymPy:
+
+lacast.generic:
+  elasticsearch.host: "localhost"
+  elasticsearch.port: 9200
+  elasticsearch.macros.index: "dlmf-macros"
+  mathoid.url: "http://localhost:10044/texvcinfo"
+  settings:
+    max.relations: 3
+    max.macros: 5
+    max.depth: -1

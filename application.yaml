@@ -1,7 +1,6 @@
 server:
 #  servlet-path: /pipe   # custom servlet-path
   port: 8080            # default server port, if not set otherwise
-  max-http-header-size: 10000000
 
 # Math AST Renderer - Main URL
 mast.url: https://vmext.wmflabs.org/
@@ -9,22 +8,28 @@ mast.url: https://vmext.wmflabs.org/
 # the latexml config is given from MathMLTools!
 latexml:
   # use this config to control whether latexml should be called locally or remote
-  remote: false
+  remote: true
   # set special url if remote is true
-  # url: https://drmf-latexml.wmflabs.org
+  # url: https://latexml.mediabotz.de/
+  url: https://drmf-latexml.wmflabs.org/convert
   # set this option if you want to parse tex with semantic macros (default is true)
-  content: true
+  content: false
   # if 'content' is true, specify the path to the macros
-  contentPath: ~/Projects/DRMF
+  contentPath: /home/andre/Projects/DRMF
 
 # Mathoid - alternative Latex to MathML converter
 mathoid:
   active: true
-  url: http://localhost:10044/mml
+  url: http://172.17.0.1:10044/mml
 
 # change this to your local path of the translator program
 translator:
-  jarPath: "/home/andre/Projects/LaCASt/bin/latex-to-cas-translator.jar"
+  jarPath: "LaCASt/bin/latex-to-cas-translator.jar"
 
 basexserver:
   harvestPath: "sampleHarvest.xml"
+
+# -db /opt/zbmath/empty-dump/ -tfidf /opt/zbmath/tfidf/ -index zbmath -esMaxHits 200 -minDF 25 -maxDF 50000
+formulacloud:
+  elasticsearchHost: "172.17.0.1"
+  elasticsearchPort: 9200

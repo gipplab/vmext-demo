@@ -1,0 +1,17 @@
+version: '3.4'
+services:
+  vmext-demo:
+    container_name: vmext-demo
+    image: vmext-demo:lacast
+    environment:
+      - "LD_LIBRARY_PATH=/usr/local/Wolfram/WolframEngine/12.1/SystemFiles/Links/JLink/SystemFiles/Libraries/Linux-x86-64/:/opt/maple2020/bin.X86_64_LINUX"
+      - "MAPLE=/opt/maple2020/"
+    mac_address: 02:42:c0:a8:70:06
+    networks:
+      - formulacloud
+    ports:
+      - 8080:8080
+    entrypoint: ["echo", "-Xss100M", "-jar", "mathpipeline.jar"]
+
+networks:
+  formulacloud:

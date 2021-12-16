@@ -11,13 +11,15 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>1.5.2.RELEASE</version>
+        <version>2.3.0.RELEASE</version>
     </parent>
 
     <properties>
-        <!-- central position for all major versions -->
+        <spring.boot.version>2.3.0.RELEASE</spring.boot.version>
         <java.version>1.8</java.version>
-        <swagger.version>2.6.1</swagger.version>
+        <swagger.version>2.9.2</swagger.version>
+        <!-- Convince spring boot to use okhttp3 v4 which is necessary to communicate with Wikidata -->
+        <okhttp3.version>4.9.0</okhttp3.version>
     </properties>
 
 
@@ -33,6 +35,10 @@
                 <enabled>true</enabled>
             </snapshots>
         </repository>
+        <repository>
+            <id>basex</id>
+            <url>https://files.basex.org/maven</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -45,23 +51,87 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+        <dependency><!-- Required to use PropertiesLauncher (loading Maple at runtime) -->
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-loader</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>gov.nist.drmf.interpreter</groupId>
+            <artifactId>interpreter.generic</artifactId>
+            <version>2.1-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.formulasearchengine.evaluation</groupId>
+                    <artifactId>evaluation</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.netbeans.external</groupId>
+                    <artifactId>com-google-guava</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-1.2-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-slf4j-impl</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-1.2-api</artifactId>
+            <version>2.15.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.15.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.15.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>6.1.5.Final</version>
+        </dependency>
 
         <!-- Apache Commons - if needed ... -->
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.5</version>
+            <version>2.7</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>28.0-jre</version>
         </dependency>
 
         <dependency>
             <groupId>com.formulasearchengine.mathmltools</groupId>
             <artifactId>mathml-similarity</artifactId>
-            <version>2.0.2</version>
+            <version>2.0.5</version>
         </dependency>
         <dependency>
             <groupId>com.formulasearchengine.mathmltools</groupId>
             <artifactId>mathml-converters</artifactId>
-            <version>2.0.2</version>
+            <version>2.0.5</version>
         </dependency>
 
         <dependency>
@@ -81,6 +151,7 @@
             <artifactId>springfox-swagger-ui</artifactId>
             <version>${swagger.version}</version>
         </dependency>
+
         <!-- for test -->
         <dependency>
             <groupId>junit</groupId>
@@ -94,6 +165,42 @@
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
         </dependency>
+
+        <dependency>
+            <groupId>org.basex</groupId>
+            <artifactId>basex</artifactId>
+            <version>9.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.basex</groupId>
+            <artifactId>basex-api</artifactId>
+            <version>9.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.formulasearchengine.formulacloud</groupId>
+            <artifactId>formula-cloud-server</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- Wikidata Toolkit -->
+        <dependency>
+            <groupId>org.wikidata.wdtk</groupId>
+            <artifactId>wdtk-dumpfiles</artifactId>
+            <version>0.12.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wikidata.wdtk</groupId>
+            <artifactId>wdtk-wikibaseapi</artifactId>
+            <version>0.12.1</version>
+        </dependency>
+        <!-- Wikipedia (Wiki Bot Framework) -->
+        <dependency>
+            <groupId>net.sourceforge</groupId>
+            <artifactId>jwbf</artifactId>
+            <version>4.0.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -102,20 +209,12 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>1.5.2.RELEASE</version>
+                <version>${spring.boot.version}</version>
                 <configuration>
-                    <executable>true</executable>
+                    <finalName>mathpipeline</finalName>
+                    <layout>JAR</layout>
+                    <mainClass>org.citeplag.ApplicationStart</mainClass>
                 </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>repackage</goal>
-                        </goals>
-                        <configuration>
-                            <finalName>mathpipeline</finalName>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
             <!-- code coverage -->
             <plugin>
@@ -140,12 +239,12 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>2.17</version>
+                <version>3.1.2</version>
                 <dependencies>
                     <dependency>
                         <groupId>com.puppycrawl.tools</groupId>
                         <artifactId>checkstyle</artifactId>
-                        <version>8.18</version>
+                        <version>8.29</version>
                     </dependency>
                 </dependencies>
                 <executions>

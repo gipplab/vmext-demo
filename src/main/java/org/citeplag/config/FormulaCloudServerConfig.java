@@ -1,6 +1,6 @@
 package org.citeplag.config;
 
-import com.formulasearchengine.mathmltools.converters.cas.TranslatorConfig;
+import com.formulasearchengine.formulacloud.es.ElasticsearchConfig;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -8,6 +8,6 @@ import org.springframework.stereotype.Component;
  * @author Andre Greiner-Petter
  */
 @Component
-@ConfigurationProperties(prefix = "translator")
-public class CASTranslatorConfig extends TranslatorConfig {
+@ConfigurationProperties(prefix = "formulacloud")
+public class FormulaCloudServerConfig extends ElasticsearchConfig {
 }

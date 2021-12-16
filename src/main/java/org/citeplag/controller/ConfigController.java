@@ -1,4 +1,4 @@
-package org.citeplag;
+package org.citeplag.controller;
 
 import com.formulasearchengine.mathmltools.converters.config.LaTeXMLConfig;
 import io.swagger.annotations.ApiOperation;
@@ -34,6 +34,9 @@ public class ConfigController {
     @Autowired
     private BaseXConfig baseXConfig;
 
+    @Autowired
+    private FormulaCloudServerConfig formulaCloudServerConfig;
+
     @GetMapping("mathoid")
     @ApiOperation(value = "Show the current default LaTeXML configuration")
     public MathoidConfig getMathoidConfig(HttpServletRequest request) throws Exception {
@@ -62,5 +65,11 @@ public class ConfigController {
     @ApiOperation(value = "Show the BaseX server configuration")
     public BaseXConfig getBaseXConfig(HttpServletRequest request) {
         return baseXConfig;
+    }
+
+    @GetMapping("formulacloud")
+    @ApiOperation(value = "Show the Formulacloud server configuration")
+    public FormulaCloudServerConfig getFormulaCloudServerConfig(HttpServletRequest request) {
+        return formulaCloudServerConfig;
     }
 }

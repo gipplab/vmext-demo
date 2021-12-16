@@ -1,5 +1,7 @@
 package org.citeplag.util;
 
+import org.citeplag.beans.CASTranslators;
+
 import java.beans.PropertyEditorSupport;
 
 /**

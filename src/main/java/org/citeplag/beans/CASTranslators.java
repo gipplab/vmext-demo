@@ -1,7 +1,7 @@
-package org.citeplag.util;
+package org.citeplag.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.formulasearchengine.mathmltools.converters.cas.SaveTranslatorWrapper;
+import gov.nist.drmf.interpreter.cas.translation.SemanticLatexTranslator;
 import org.citeplag.config.CASTranslatorConfig;
 
 import java.util.Arrays;
@@ -11,14 +11,15 @@ import java.util.Arrays;
  */
 public enum CASTranslators {
     MapleTranslator("Maple", null),
-    MathematicaTranslator("Mathematica", null);
+    MathematicaTranslator("Mathematica", null),
+    SympyTranslator("SymPy", null);
 
     private String cas;
 
     @JsonIgnore
-    private SaveTranslatorWrapper translator;
+    private SemanticLatexTranslator translator;
 
-    CASTranslators(String cas, SaveTranslatorWrapper translator) {
+    CASTranslators(String cas, SemanticLatexTranslator translator) {
         this.cas = cas;
         this.translator = translator;
     }
@@ -29,12 +30,9 @@ public enum CASTranslators {
                 continue;
             }
 
-            ct.translator = new SaveTranslatorWrapper();
-            ct.translator.init(
-                    config.getJarPath(),
-                    ct.cas,
-                    config.getReferencesPath()
-            );
+//            System.out.println("Load CAS jar from " + config.getJarPath());
+//            System.out.println("Exists: " + Files.exists(Paths.get(config.getJarPath())));
+            ct.translator = new SemanticLatexTranslator(ct.cas);
         }
     }
 
@@ -53,7 +51,7 @@ public enum CASTranslators {
     }
 
     @JsonIgnore
-    public SaveTranslatorWrapper getTranslator() {
+    public SemanticLatexTranslator getTranslator() {
         return translator;
     }
 

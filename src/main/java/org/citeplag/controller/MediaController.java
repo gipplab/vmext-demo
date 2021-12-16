@@ -1,4 +1,4 @@
-package org.citeplag.config;
+package org.citeplag.controller;
 
 import com.formulasearchengine.mathmltools.converters.LaTeXMLConverter;
 import com.formulasearchengine.mathmltools.converters.MathoidConverter;
@@ -11,14 +11,17 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.citeplag.config.LaTeXMLRemoteConfig;
+import org.citeplag.config.MathoidConfig;
 import org.citeplag.util.MMLEndpointCache;
-import org.citeplag.util.MathoidRequest;
+import org.citeplag.beans.MathoidRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.w3c.dom.Document;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -110,7 +113,12 @@ public class MediaController {
         // parse requested expression
         Document mmlDoc = latexml.convertToDoc(q);
         String rawTex = mmlDoc.getDocumentElement().getAttribute("alttext");
-        String mml = XmlDocumentWriter.stringify(mmlDoc);
+        String mml = null;
+        try {
+            mml = XmlDocumentWriter.stringify(mmlDoc);
+        } catch (TransformerException e) {
+            e.printStackTrace();
+        }
         if (rawTex == null || rawTex.isEmpty()) {
             rawTex = q; // if we cannot extract alttext -> take the original input
         }
