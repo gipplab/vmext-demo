@@ -11,10 +11,8 @@ import org.citeplag.domain.MathRequest;
 import org.citeplag.domain.MathUpdate;
 import org.citeplag.beans.BaseXGenericResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -66,13 +64,43 @@ public class BaseXController {
         return process(query, "xquery", request);
     }
 
+    /*
     @PostMapping("/mwsquery")
+    //@RequestMapping(consumes="application/json")
     @ApiOperation(value = "Run MWS query on BaseX")
     public MathRequest mwsProcessing(
-            @RequestParam String query,
-            HttpServletRequest request) {
+            @RequestParam String query
+            ,HttpServletRequest request) {
+
         return process(query, "mws", request);
     }
+    */
+    @PostMapping(
+            value = "mwsquery",
+            consumes = {MediaType.APPLICATION_JSON_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE}) //tbd clarify produces
+    @ApiOperation(value = "Run MWS query on BaseX", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public MathRequest mwsProcessing(@RequestBody com.fasterxml.jackson.databind.JsonNode complete_query, HttpServletRequest request){ // @RequestBody Object person) {
+
+        Object field = complete_query.get("query");
+        if(field==null){
+            // TBD Return invalid data here
+            return  process(null, "mws", request);
+        }
+
+        String query = complete_query.get("query").textValue();
+        return  process(query, "mws", request);
+    }
+
+    /*
+    @PostMapping(value="/mwsquery")
+    public MathRequest process(@RequestParam String query, @RequestBody com.fasterxml.jackson.databind.JsonNode request) {
+        // Just a test for json
+        return process(query, "mws", null);
+
+    }
+    */
+
 
     private MathRequest process(String query, String type, HttpServletRequest request) {
         if (!startServerIfNecessary()) {
