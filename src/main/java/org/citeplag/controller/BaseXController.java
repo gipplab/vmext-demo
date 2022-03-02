@@ -11,11 +11,15 @@ import org.citeplag.domain.MathRequest;
 import org.citeplag.domain.MathUpdate;
 import org.citeplag.beans.BaseXGenericResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.configurationprocessor.json.JSONException;
+import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -64,24 +68,38 @@ public class BaseXController {
         return process(query, "xquery", request);
     }
 
-    /*
-    @PostMapping("/mwsquery")
-    //@RequestMapping(consumes="application/json")
-    @ApiOperation(value = "Run MWS query on BaseX")
-    public MathRequest mwsProcessing(
-            @RequestParam String query
-            ,HttpServletRequest request) {
 
+    @PostMapping("/mwsquery_old")
+    @ApiOperation(value = "Run MWS query on BaseX")
+    public MathRequest mwsProcessingOld(@RequestParam String query, HttpServletRequest request) {
         return process(query, "mws", request);
     }
-    */
+
+
+    @PostMapping("/mwsquery")
+    @ApiOperation(value = "Run MWS query on BaseX")
+    public MathRequest mwsProcessing(@RequestBody String data, HttpServletRequest request) {
+
+        String query = null;
+        try {
+              String result = java.net.URLDecoder.decode(data, StandardCharsets.UTF_8.name());
+              JSONObject jsonObject = new JSONObject(result);
+              query = jsonObject.get("query").toString();
+        } catch (Exception e) {
+            // not going to happen - value came from JDK's own StandardCharsets
+            e.printStackTrace();
+        }
+        return process(query, "mws", request);
+    }
+
+    /*
     @PostMapping(
             value = "mwsquery",
-            consumes = {MediaType.APPLICATION_JSON_VALUE},
-            produces = {MediaType.APPLICATION_JSON_VALUE}) //tbd clarify produces
-    @ApiOperation(value = "Run MWS query on BaseX", consumes = MediaType.APPLICATION_JSON_VALUE)
+            consumes = {MediaType.ALL_VALUE},
+            produces = {MediaType.ALL_VALUE}) //tbd clarify produces
+    @ApiOperation(value = "Run MWS query on BaseX", consumes = MediaType.ALL_VALUE)
     public MathRequest mwsProcessing(@RequestBody com.fasterxml.jackson.databind.JsonNode complete_query, HttpServletRequest request){ // @RequestBody Object person) {
-
+        // Problem with accept headers from mediawiki
         Object field = complete_query.get("query");
         if(field==null){
             // TBD Return invalid data here
@@ -91,7 +109,7 @@ public class BaseXController {
         String query = complete_query.get("query").textValue();
         return  process(query, "mws", request);
     }
-
+    */
     /*
     @PostMapping(value="/mwsquery")
     public MathRequest process(@RequestParam String query, @RequestBody com.fasterxml.jackson.databind.JsonNode request) {
