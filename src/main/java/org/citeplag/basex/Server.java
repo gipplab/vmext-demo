@@ -56,7 +56,7 @@ public final class Server {
 
 		// "-d" for debug
 		baseXServer = new BaseXServer( "-p" + PORT, "-n" + SERVER_NAME,
-		    "-c " + "set mainmem on;set intparse on;create db " + DATABASE_NAME + " " + input.getAbsolutePath());
+		    "-c " + "set mainmem true\nset intparse on\n create db " + DATABASE_NAME + " " + input.getAbsolutePath());
 
 		/* [CG] I dropped all health checks. If something should be going wrong here, please give me a note;
 		 * it should definitely be fixed! */
