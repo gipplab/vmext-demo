@@ -11,13 +11,11 @@ import org.citeplag.domain.MathRequest;
 import org.citeplag.domain.MathUpdate;
 import org.citeplag.beans.BaseXGenericResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.boot.configurationprocessor.json.JSONObject;
+import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -68,10 +66,28 @@ public class BaseXController {
 
     @PostMapping("/mwsquery")
     @ApiOperation(value = "Run MWS query on BaseX")
-    public MathRequest mwsProcessing(
-            @RequestParam String query,
-            HttpServletRequest request) {
+    public MathRequest mwsProcessing(@RequestBody String data, HttpServletRequest request) {
+        String query = extractQueryFromData(data);
+        if(query==null){ return null; }
         return process(query, "mws", request);
+    }
+
+    /**
+     * Extracting the query input from url encoded string of data.
+     * This is required to handle requests coming from FormulaSearch-extension.
+     * @param data url encoded string which container query as json.
+     * @return query as string or data
+     */
+    private String extractQueryFromData(String data){
+        String query = null;
+        try {
+            String result = java.net.URLDecoder.decode(data, StandardCharsets.UTF_8.name());
+            JSONObject jsonObject = new JSONObject(result);
+            query = jsonObject.get("query").toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return query;
     }
 
     private MathRequest process(String query, String type, HttpServletRequest request) {
