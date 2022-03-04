@@ -17,6 +17,10 @@ Task 3 is executed via an external JS widget written by students at the HTW Berl
 
 ## Build ##
 
+### Initialize the submodules ###
+`git submodule update --init --recursive`
+
+### Do maven build ###
 Check-out this project and build it via Maven. In the `/target` directory you will 
 find the executable server instance `mathpipeline.jar`.
 
