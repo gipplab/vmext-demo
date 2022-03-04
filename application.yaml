@@ -1,6 +1,6 @@
 server:
 #  servlet-path: /pipe   # custom servlet-path
-  port: 8080            # default server port, if not set otherwise
+  port: 8097            # default server port, if not set otherwise
 
 # Math AST Renderer - Main URL
 mast.url: https://vmext.wmflabs.org/
@@ -27,7 +27,7 @@ translator:
   jarPath: "LaCASt/bin/latex-to-cas-translator.jar"
 
 basexserver:
-  harvestPath: "sampleHarvest.xml"
+  harvestPath: "/home/johannes/Repositories/vmext-demo/my_harvests/"
 
 # -db /opt/zbmath/empty-dump/ -tfidf /opt/zbmath/tfidf/ -index zbmath -esMaxHits 200 -minDF 25 -maxDF 50000
 formulacloud:
