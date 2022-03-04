@@ -1,7 +1,7 @@
 package org.citeplag.controller;
 
 import com.formulasearchengine.mathosphere.basex.Client;
-import com.formulasearchengine.mathosphere.basex.Server;
+import org.citeplag.basex.Server;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.apache.log4j.LogManager;
