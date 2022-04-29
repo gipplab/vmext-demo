@@ -169,7 +169,7 @@
         <dependency>
             <groupId>org.basex</groupId>
             <artifactId>basex</artifactId>
-            <version>9.2</version>
+            <version>9.2.4</version>
         </dependency>
 
         <dependency>
