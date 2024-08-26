@@ -17,7 +17,7 @@
     <properties>
         <spring.boot.version>2.3.0.RELEASE</spring.boot.version>
         <java.version>1.8</java.version>
-        <swagger.version>2.9.2</swagger.version>
+        <swagger.version>2.10.0</swagger.version>
         <!-- Convince spring boot to use okhttp3 v4 which is necessary to communicate with Wikidata -->
         <okhttp3.version>4.9.0</okhttp3.version>
     </properties>
